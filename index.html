@@ -1,0 +1,2138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quarterly AMD Quality Score</title>
+<style>
+/* ── Reset & base ── */
+*{box-sizing:border-box}
+body{background:#fff;font-family:'Noto Sans',Arial,sans-serif;font-size:14px;color:#333;margin:0;padding:0}
+.page-content{max-width:900px;margin:0 auto;padding:20px 15px 40px}
+h1.section-heading{font-size:22px;font-weight:700;margin:20px 0 10px;color:#000;border-bottom:2px solid #ED1C24;padding-bottom:6px}
+.text-block{background:#f8f8f8;border-left:4px solid #ED1C24;padding:14px 16px;margin-bottom:24px;font-size:13px;line-height:1.7}
+.text-block strong{display:block;margin-top:8px}
+
+/* ── Fieldset / question cards ── */
+fieldset.question{border:1px solid #ddd;border-radius:6px;padding:18px 20px;margin-bottom:22px;background:#fff}
+.question-text{font-weight:700;font-size:15px;color:#000;display:block;margin-bottom:6px}
+.instruction-text{font-size:12px;color:#666;margin-bottom:12px;font-style:italic}
+
+/* ── Form groups (Bootstrap-style) ── */
+.form-group{margin-bottom:16px}
+.form-group:last-child{margin-bottom:0}
+label.control-label{display:block;font-weight:600;font-size:13px;margin-bottom:4px}
+.text-danger{color:#ED1C24}
+.form-control{display:block;width:100%;padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-family:'Noto Sans',Arial,sans-serif;line-height:1.5;color:#333;background:#fff;transition:border-color .15s}
+.form-control:focus{border-color:#ED1C24;outline:0;box-shadow:0 0 0 2px rgba(237,28,36,.15)}
+select.form-control{height:34px}
+
+/* ── Bootstrap alert-danger style ── */
+.alert{padding:8px 12px;border-radius:4px;font-size:12px;margin-top:5px}
+.alert-danger{color:#721c24;background:#f8d7da;border:1px solid #f5c6cb}
+.alert-info{color:#0c5460;background:#d1ecf1;border:1px solid #bee5eb}
+.validation-message{display:none}
+
+/* ── Slider rows ── */
+.slider-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0;flex-wrap:wrap}
+.slider-row:last-child{border-bottom:none}
+.slider-label{flex:1;min-width:220px;font-size:13px}
+.slider-wrap{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.score-slider{-webkit-appearance:none;appearance:none;width:220px;height:8px;border-radius:4px;outline:none;cursor:pointer}
+.score-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:#ED1C24;cursor:pointer;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.score-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#ED1C24;cursor:pointer;border:2px solid #fff}
+.score-display{min-width:52px;text-align:center;font-weight:700;font-size:15px;padding:3px 8px;border-radius:4px;color:#fff;background:#aaa}
+.score-na{background:#888}.score-bad{background:#e74c3c}.score-low{background:#f1c40f}.score-mid{background:#4E95D9}.score-high{background:#4EA72E}.score-best{background:#196B24}
+/* color scheme: 1-3 red, 4-5 yellow, 6-7 blue, 8-9 green, 10 dark green */
+.scale-labels{display:flex;justify-content:space-between;font-size:10px;color:#999;width:220px;margin-top:2px;padding:0 2px}
+
+/* ── Live section average ── */
+.live-avg-bar{display:flex;align-items:center;gap:12px;margin-top:14px;padding:10px 14px;background:#f8f8f8;border-radius:6px;border:1px solid #eee}
+.live-avg-bar .avg-label{font-size:12px;color:#555;font-weight:600;flex:1}
+.live-avg-badge{font-size:18px;font-weight:900;min-width:54px;text-align:center;padding:4px 12px;border-radius:6px;color:#fff;background:#ccc;transition:background .25s}
+.live-avg-note{font-size:11px;color:#999;font-style:italic}
+
+/* ── Live total score ── */
+.live-total-bar{background:#1a1a1a;border-radius:8px;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;margin:8px 0 28px;gap:16px}
+.live-total-bar .lt-label{font-size:14px;font-weight:700;color:#fff}
+.live-total-score{font-size:42px;font-weight:900;color:#FFC000;line-height:1;transition:color .25s}
+
+/* ── Submit button ── */
+.btn-submit{background:#ED1C24;color:#fff;font-size:15px;font-weight:700;padding:10px 40px;border:none;border-radius:5px;cursor:pointer;transition:background .2s;font-family:'Noto Sans',Arial,sans-serif}
+.btn-submit:hover{background:#c0121a}
+.text-center{text-align:center}
+.mt-3{margin-top:1rem}
+.mb-4{margin-bottom:1.5rem}
+
+/* ── Results panel ── */
+#results-panel{display:none}
+.result-header{background:#ED1C24;color:#fff;padding:16px 20px;border-radius:6px 6px 0 0}
+.result-header h2{margin:0;font-size:18px}
+.result-body{background:#f9f9f9;border:1px solid #ddd;border-top:none;border-radius:0 0 6px 6px;padding:24px 20px}
+.total-box{background:#fff;border:1px solid #ddd;border-radius:8px;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.total-box .t-label{font-size:16px;font-weight:700;color:#333}
+.total-box .t-value{font-size:46px;font-weight:900;color:#333}
+
+/* ── Bootstrap grid (minimal) ── */
+.row{display:flex;flex-wrap:wrap;margin:0 -8px}
+.col-md-3{flex:0 0 25%;max-width:25%;padding:0 8px}
+.col-6{flex:0 0 50%;max-width:50%;padding:0 8px}
+@media(max-width:600px){.col-md-3{flex:0 0 50%;max-width:50%}}
+
+/* ── Score cards ── */
+.score-card{background:#fff;border:1px solid #ddd;border-radius:6px;padding:14px;text-align:center;margin-bottom:12px}
+.score-card .sc-label{font-size:11px;text-transform:uppercase;color:#666;margin-bottom:6px;letter-spacing:.04em}
+.score-card .sc-value{font-size:32px;font-weight:900}
+
+/* ── Results table ── */
+.table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px}
+.table th{background:#343a40;color:#fff;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase}
+.table td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:top}
+.table-bordered th,.table-bordered td{border:1px solid #dee2e6}
+.table-sm th,.table-sm td{padding:5px 8px}
+.thead-dark th{background:#343a40;color:#fff}
+
+/* ── Comments / ranking ── */
+.comment-result{background:#fff;border-left:4px solid #ED1C24;padding:10px 14px;margin-bottom:10px;border-radius:0 4px 4px 0}
+.comment-result .cr-section{font-size:11px;text-transform:uppercase;color:#666;margin-bottom:4px}
+
+/* ── Buttons (Bootstrap-style, no CDN) ── */
+.btn{display:inline-block;font-weight:400;text-align:center;white-space:nowrap;vertical-align:middle;cursor:pointer;border:1px solid transparent;padding:6px 14px;font-size:14px;border-radius:4px;font-family:'Noto Sans',Arial,sans-serif;transition:background .15s}
+.btn-secondary{background:#6c757d;color:#fff;border-color:#6c757d}.btn-secondary:hover{background:#545b62}
+.btn-success{background:#28a745;color:#fff;border-color:#28a745}.btn-success:hover{background:#1e7e34}
+.btn-dark{background:#343a40;color:#fff;border-color:#343a40}.btn-dark:hover{background:#23272b}
+.mr-2{margin-right:8px}
+.mt-3{margin-top:1rem}
+.text-right{text-align:right}
+
+/* ── Misc ── */
+hr{border:none;border-top:1px solid #dee2e6;margin:16px 0}
+h5{font-size:16px;font-weight:700;margin-bottom:14px}
+.choose-one select{max-width:300px}
+
+/* ── Language selection screen ── */
+#lang-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:40px 20px;text-align:center}
+#lang-screen h1{font-size:24px;font-weight:700;color:#000;margin-bottom:8px}
+#lang-screen p{font-size:13px;color:#666;margin-bottom:32px}
+.lang-list{display:flex;flex-direction:column;gap:12px;width:100%;max-width:360px}
+.lang-btn{display:block;width:100%;padding:14px 20px;border:1px solid #ddd;border-radius:6px;background:#fff;font-size:15px;font-family:'Noto Sans',Arial,sans-serif;cursor:pointer;text-align:left;transition:border-color .2s,background .2s;color:#333}
+.lang-btn:hover{border-color:#ED1C24;background:#fff8f8}
+.lang-btn .lang-native{font-weight:700;display:block}
+.lang-btn .lang-en{font-size:12px;color:#888;display:block;margin-top:2px}
+
+/* ── Language switcher (top of form) ── */
+.lang-switcher{display:flex;gap:8px;justify-content:flex-end;margin-bottom:12px}
+.lang-switch-btn{background:none;border:1px solid #ddd;border-radius:4px;padding:4px 10px;font-size:12px;font-family:'Noto Sans',Arial,sans-serif;cursor:pointer;color:#555;transition:border-color .15s,color .15s}
+.lang-switch-btn.active,.lang-switch-btn:hover{border-color:#ED1C24;color:#ED1C24}
+</style>
+</head>
+<body>
+
+<div class="page-content">
+
+<!-- Language Selection Screen -->
+<div id="lang-screen">
+  <h1>Quarterly AMD Quality Score</h1>
+  <p>Select a language to take your survey in:</p>
+  <div class="lang-list">
+    <button class="lang-btn" onclick="selectLang('en')">
+      <span class="lang-native">English (United States)</span>
+    </button>
+    <button class="lang-btn" onclick="selectLang('zh')">
+      <span class="lang-native">中文（简体）</span>
+      <span class="lang-en">Chinese (Simplified, China)</span>
+    </button>
+    <button class="lang-btn" onclick="selectLang('ja')">
+      <span class="lang-native">日本語（日本）</span>
+      <span class="lang-en">Japanese (Japan)</span>
+    </button>
+  </div>
+</div>
+
+<div id="survey-form" style="display:none">
+
+<!-- Language switcher -->
+<div class="lang-switcher">
+  <button class="lang-switch-btn" id="sw-en" onclick="selectLang('en')">EN</button>
+  <button class="lang-switch-btn" id="sw-zh" onclick="selectLang('zh')">中文</button>
+  <button class="lang-switch-btn" id="sw-ja" onclick="selectLang('ja')">日本語</button>
+</div>
+
+<h1 class="section-heading" id="page-title">Quarterly AMD Quality Score</h1>
+
+<div class="text-block">
+  <p>Thank you for taking the time to complete this survey. Your feedback helps us evaluate our performance and identify areas for improvement. Please answer the following questions based on your experience with AMD during the selected survey period. If a question does not apply to your organization or you do not have sufficient information to respond, please select Not Applicable (N/A).</p>
+  <strong>Rating Scale</strong>
+  <p>For each item, please rate AMD's performance using the following scale:<br>
+  <b>1&ndash;3:</b> Unacceptable &ndash; Performance significantly below expectations<br>
+  <b>4&ndash;5:</b> Below Expectations &ndash; Improvement needed<br>
+  <b>6&ndash;7:</b> Meets Expectations &ndash; Acceptable performance<br>
+  <b>8&ndash;9:</b> Above Expectations &ndash; Exceeds expectations<br>
+  <b>10:</b> Industry Best &ndash; Best-in-class performance<br><br>
+  Unless otherwise specified, ratings should reflect your organization's expectations and agreed requirements. Optional comment fields are provided to help us better understand your ratings. Specific examples are especially valuable.</p>
+</div>
+
+<!-- Respondent Info -->
+<fieldset class="question">
+  <span class="question-text" id="q_section_respondent">Customer &amp; Respondent Information</span>
+  <div class="form-group">
+    <label class="control-label" for="q_company">Your Company <span class="text-danger">*</span></label>
+    <input type="text" class="form-control" id="q_company" maxlength="255">
+    <div class="alert alert-danger validation-message" id="err_company">Please enter your company name before continuing.</div>
+  </div>
+  <div class="form-group">
+    <label class="control-label" for="q_name">Your Name <span class="text-danger">*</span></label>
+    <input type="text" class="form-control" id="q_name" maxlength="255">
+    <div class="alert alert-danger validation-message" id="err_name">Please enter your name before continuing.</div>
+  </div>
+  <div class="form-group">
+    <label class="control-label" for="q_email">Your Email Address <span class="text-danger">*</span></label>
+    <input type="email" class="form-control" id="q_email" maxlength="255" placeholder="Email">
+    <div class="alert alert-danger validation-message" id="err_email">Please enter a valid email address before continuing.</div>
+  </div>
+  <div class="form-group">
+    <label class="control-label" for="q_title">Your Job Title <span class="text-danger">*</span></label>
+    <input type="text" class="form-control" id="q_title" maxlength="255">
+    <div class="alert alert-danger validation-message" id="err_title">Please enter your job title before continuing.</div>
+  </div>
+  <div class="form-group">
+    <label class="control-label" for="q_amd_contact" id="lbl_amd_contact">AMD Internal Contact <span class="text-danger">*</span></label>
+    <input type="email" class="form-control" id="q_amd_contact" maxlength="255" placeholder="name@amd.com">
+    <div class="alert alert-danger validation-message" id="err_amd_contact">Please enter a valid @amd.com email address before continuing.</div>
+  </div>
+  <div class="form-group">
+    <label class="control-label" for="q_product">Product <span class="text-danger">*</span></label>
+    <select class="form-control" id="q_product">
+      <option value="">&nbsp;</option>
+      <option>Server EPYC</option><option>Server Instinct</option>
+      <option>Client Radeon</option><option>Client Ryzen</option>
+      <option>Embedded EPYC</option><option>Embedded Ryzen</option>
+      <option>Adaptive SoC</option><option>Adaptive FPGA</option>
+      <option>Adaptive Accelerators</option><option>Ethernet Adaptors</option>
+      <option>Evaluation Boards</option>
+    </select>
+    <div class="alert alert-danger validation-message" id="err_product">Please select a product before continuing.</div>
+  </div>
+</fieldset>
+
+<!-- Quarter / Year -->
+<fieldset class="question">
+  <span class="question-text" id="q_section_period">Please indicate the quarter and year your feedback is based on.</span>
+  <div class="form-group">
+    <label class="control-label" for="q_quarter">Quarter <span class="text-danger">*</span></label>
+    <select class="form-control" id="q_quarter" style="max-width:200px;">
+      <option value="">&nbsp;</option>
+      <option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option>
+    </select>
+    <div class="alert alert-danger validation-message" id="err_quarter">Please select a quarter before continuing.</div>
+  </div>
+  <div class="form-group">
+    <label class="control-label" for="q_year">Year <span class="text-danger">*</span></label>
+    <select class="form-control" id="q_year" style="max-width:200px;">
+      <option value="">&nbsp;</option>
+      <option>2025</option><option>2026</option><option>2027</option>
+      <option>2028</option><option>2029</option><option>2030</option><option>2031</option>
+    </select>
+    <div class="alert alert-danger validation-message" id="err_year">Please select a year before continuing.</div>
+  </div>
+</fieldset>
+
+<!-- Field Quality -->
+<fieldset class="question" id="sec_field">
+  <span class="question-text" id="sec_heading_field">Field, Initial &amp; Mass Production Quality</span>
+  <div class="instruction-text" id="sec_instruction_field">Rating scale: 1&ndash;3 = Unacceptable, 4&ndash;5 = Below expectations, 6&ndash;7 = Meets expectations, 8&ndash;9 = Above expectations, 10 = Industry best. N/A = Not applicable (slide to 0).</div>
+  <div id="sliders_field"></div>
+  <div class="live-avg-bar">
+    <span class="avg-label" id="avg_label_field">Section Average</span>
+    <span class="live-avg-badge" id="avg_field">N/A</span>
+    <span class="live-avg-note" id="avg_field_note">No scores yet</span>
+  </div>
+  <div class="alert alert-danger validation-message" id="err_field">Please score at least one criterion in this section (move a slider off N/A) before continuing.</div>
+</fieldset>
+<fieldset class="question">
+  <label class="question-text" for="q_comment_field" id="lbl_comment_field">Do you have any additional comments related to Field, Initial &amp; Mass Production Quality?</label>
+  <textarea class="form-control" id="q_comment_field" rows="3"></textarea>
+</fieldset>
+
+<!-- RMA Support -->
+<fieldset class="question" id="sec_rma">
+  <span class="question-text" id="sec_heading_rma">RMA Support including FA</span>
+  <div class="instruction-text" id="sec_instruction_rma">Rating scale: 1&ndash;3 = Unacceptable, 4&ndash;5 = Below expectations, 6&ndash;7 = Meets expectations, 8&ndash;9 = Above expectations, 10 = Industry best. N/A = Not applicable (slide to 0).</div>
+  <div id="sliders_rma"></div>
+  <div class="live-avg-bar">
+    <span class="avg-label" id="avg_label_rma">Section Average</span>
+    <span class="live-avg-badge" id="avg_rma">N/A</span>
+    <span class="live-avg-note" id="avg_rma_note">No scores yet</span>
+  </div>
+  <div class="alert alert-danger validation-message" id="err_rma">Please score at least one criterion in this section (move a slider off N/A) before continuing.</div>
+</fieldset>
+<fieldset class="question">
+  <label class="question-text" for="q_comment_rma" id="lbl_comment_rma">Do you have any additional comments related to RMA Support?</label>
+  <textarea class="form-control" id="q_comment_rma" rows="3"></textarea>
+</fieldset>
+
+<!-- Quality Management -->
+<fieldset class="question" id="sec_qm">
+  <span class="question-text" id="sec_heading_qm">Quality Management</span>
+  <div class="instruction-text" id="sec_instruction_qm">Rating scale: 1&ndash;3 = Unacceptable, 4&ndash;5 = Below expectations, 6&ndash;7 = Meets expectations, 8&ndash;9 = Above expectations, 10 = Industry best. N/A = Not applicable (slide to 0).</div>
+  <div id="sliders_qm"></div>
+  <div class="live-avg-bar">
+    <span class="avg-label" id="avg_label_qm">Section Average</span>
+    <span class="live-avg-badge" id="avg_qm">N/A</span>
+    <span class="live-avg-note" id="avg_qm_note">No scores yet</span>
+  </div>
+  <div class="alert alert-danger validation-message" id="err_qm">Please score at least one criterion in this section (move a slider off N/A) before continuing.</div>
+</fieldset>
+<fieldset class="question">
+  <label class="question-text" for="q_comment_qm" id="lbl_comment_qm">Do you have any additional comments related to Quality Management?</label>
+  <textarea class="form-control" id="q_comment_qm" rows="3"></textarea>
+</fieldset>
+
+<!-- Overall -->
+<fieldset class="question" id="sec_overall">
+  <span class="question-text" id="sec_heading_overall">Overall</span>
+  <div class="instruction-text" id="sec_instruction_overall">Rating scale: 1&ndash;3 = Unacceptable, 4&ndash;5 = Below expectations, 6&ndash;7 = Meets expectations, 8&ndash;9 = Above expectations, 10 = Industry best. N/A = Not applicable (slide to 0).</div>
+  <div id="sliders_overall"></div>
+  <div class="live-avg-bar">
+    <span class="avg-label" id="avg_label_overall">Section Average</span>
+    <span class="live-avg-badge" id="avg_overall">N/A</span>
+    <span class="live-avg-note" id="avg_overall_note">No scores yet</span>
+  </div>
+  <div class="alert alert-danger validation-message" id="err_overall">Please score at least one criterion in this section (move a slider off N/A) before continuing.</div>
+</fieldset>
+<fieldset class="question">
+  <label class="question-text" for="q_comment_overall" id="lbl_comment_overall">Please provide any additional comments related to overall quality, and include the primary reason for your score here.</label>
+  <textarea class="form-control" id="q_comment_overall" rows="3"></textarea>
+</fieldset>
+
+<!-- Supplier ranking -->
+<fieldset class="question choose-one">
+  <span class="question-text"><span id="section_ranking">How would you rank AMD's quality among your comparable suppliers?</span> <span class="text-danger">*</span></span>
+  <div class="form-group mt-3">
+    <select class="form-control" id="q_ranking">
+      <option value="">&nbsp;</option>
+      <option value="1">1st</option><option value="2">2nd</option>
+      <option value="3">3rd</option><option value="4">4th</option>
+      <option value="5">5th</option><option value="6">&gt;5th</option>
+      <option value="7">Not Applicable (N/A)</option>
+    </select>
+    <div class="alert alert-danger validation-message" id="err_ranking">Please select a ranking before continuing.</div>
+  </div>
+</fieldset>
+
+<!-- Live total score -->
+<div class="live-total-bar">
+  <div class="lt-label" id="total_bar_label">Total Average Score</div>
+  <div class="live-total-score" id="live-total">&mdash;</div>
+</div>
+
+<!-- Submit -->
+<div id="err-banner" style="display:none;">
+  &#9888; Please fix the highlighted fields above before submitting.
+</div>
+<div class="text-center mt-3 mb-4">
+  <button type="button" class="btn-submit" id="btn-submit" onclick="handleSubmit()">Submit Survey</button>
+</div>
+
+</div><!-- /survey-form -->
+
+<!-- Results -->
+<div id="results-panel">
+  <div class="result-header">
+    <h2 id="result_title_h2">Thank you for completing the AMD Quality Survey</h2>
+    <p id="r-meta" style="margin:4px 0 0;font-size:13px;opacity:.85;"></p>
+  </div>
+  <div class="result-body">
+    <div class="total-box">
+      <div class="t-label" id="result_total_lbl">Total Score</div>
+      <div class="t-value" id="r-total">&mdash;</div>
+    </div>
+
+    <div class="row" id="r-section-cards"></div>
+
+    <hr>
+    <h5 id="result_detail_h5">Score Detail</h5>
+    <table class="table table-sm table-bordered">
+      <thead class="thead-dark">
+        <tr><th>Section</th><th>Criterion</th><th style="width:80px;text-align:center;">Score</th></tr>
+      </thead>
+      <tbody id="r-detail-body"></tbody>
+    </table>
+
+    <hr>
+    <h5 id="result_comments_h5">Your Comments</h5>
+    <div id="r-comments"></div>
+
+    <div style="margin-top:14px;" id="r-ranking-line">
+      <strong>Supplier Ranking:</strong> AMD ranked <span id="r-ranking" style="font-weight:700;color:#ED1C24;"></span> among comparable suppliers.
+    </div>
+
+    <div class="alert alert-info mt-3" style="font-size:13px;" id="email-notice">
+      ⏳ <strong>Sending your results to SharePoint and emailing you...</strong>
+    </div>
+
+    <div class="text-right mt-3">
+      <button class="btn btn-secondary mr-2" id="btn-edit" onclick="document.getElementById('survey-form').style.display='';document.getElementById('results-panel').style.display='none';window.scrollTo(0,0);">&larr; Edit Responses</button>
+      <button class="btn btn-success mr-2" id="btn-export" onclick="exportCSV()">&#128196; Export to Excel</button>
+      <button class="btn btn-dark" id="btn-print" onclick="window.print()">&#128424; Print / Save PDF</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /page-content -->
+
+<script>
+// ── Translations ─────────────────────────────────────────────
+var LANG = 'en';
+
+var T = {
+  en: {
+    title: 'Quarterly AMD Quality Score',
+    intro_p: "Thank you for taking the time to complete this survey. Your feedback helps us evaluate our performance and identify areas for improvement. Please answer the following questions based on your experience with AMD during the selected survey period. If a question does not apply to your organization or you do not have sufficient information to respond, please select Not Applicable (N/A).",
+    rating_scale: 'Rating Scale',
+    rating_desc: '<b>1&ndash;3:</b> Unacceptable &ndash; Performance significantly below expectations<br><b>4&ndash;5:</b> Below Expectations &ndash; Improvement needed<br><b>6&ndash;7:</b> Meets Expectations &ndash; Acceptable performance<br><b>8&ndash;9:</b> Above Expectations &ndash; Exceeds expectations<br><b>10:</b> Industry Best &ndash; Best-in-class performance<br><br>Unless otherwise specified, ratings should reflect your organization\'s expectations and agreed requirements. Optional comment fields are provided to help us better understand your ratings. Specific examples are especially valuable.',
+    section_respondent: 'Customer & Respondent Information',
+    lbl_company: 'Your Company', err_company: 'Please enter your company name before continuing.',
+    lbl_name: 'Your Name', err_name: 'Please enter your name before continuing.',
+    lbl_email: 'Your Email Address', err_email: 'Please enter a valid email address before continuing.', email_placeholder: 'Email',
+    lbl_title: 'Your Job Title', err_title: 'Please enter your job title before continuing.',
+    lbl_product: 'Product', err_product: 'Please select a product before continuing.',
+    section_period: 'Please indicate the quarter and year your feedback is based on.',
+    lbl_quarter: 'Quarter', err_quarter: 'Please select a quarter before continuing.',
+    lbl_year: 'Year', err_year: 'Please select a year before continuing.',
+    rating_instruction: 'Rating scale: 1&ndash;3 = Unacceptable, 4&ndash;5 = Below expectations, 6&ndash;7 = Meets expectations, 8&ndash;9 = Above expectations, 10 = Industry best. Slide to 0 for N/A.',
+    sec_avg: 'Section Average', no_scores: 'No scores yet', criteria_scored: 'criteria scored',
+    err_section: 'Please score at least one criterion in this section before continuing.',
+    lbl_comment_field: 'Do you have any additional comments related to Field, Initial & Mass Production Quality?',
+    lbl_comment_rma: 'Do you have any additional comments related to RMA Support?',
+    lbl_comment_qm: 'Do you have any additional comments related to Quality Management?',
+    lbl_comment_overall: 'Please provide any additional comments related to overall quality, and include the primary reason for your score here.',
+    section_ranking: "How would you rank AMD's quality among your comparable suppliers?",
+    err_ranking: 'Please select a ranking before continuing.',
+    rank_opts: ['1st','2nd','3rd','4th','5th','>5th','Not Applicable (N/A)'],
+    total_label: 'Total Average Score',
+    submit_btn: 'Submit Survey',
+    err_banner: '⚠ Please fix the highlighted fields above before submitting.',
+    result_title: 'Thank you for completing the AMD Quality Survey',
+    result_total: 'Total Score',
+    result_detail: 'Score Detail',
+    result_comments: 'Your Comments',
+    result_ranking: 'Supplier Ranking: AMD ranked',
+    result_ranking2: 'among comparable suppliers.',
+    comment_sections: {
+      field:   'Field, Initial & Mass Production Quality',
+      rma:     'RMA Support including FA',
+      qm:      'Quality Management',
+      overall: 'Overall'
+    },
+    result_email_notice: "📧 <strong>Your email client should have opened</strong> with pre-filled results. Please <strong>attach the downloaded .xlsx file</strong> before sending. If it didn't open, <a href='#' id='mailto-retry'>click here to try again</a>.",
+    btn_edit: '← Edit Responses',
+    btn_export: '📄 Export to Excel',
+    btn_print: '🖨 Print / Save PDF',
+    col_section: 'Section', col_criterion: 'Criterion', col_score: 'Score',
+    email_title: 'AMD Quarterly Quality Review (QQR) — Survey Results',
+    email_submitted: 'Submitted by',
+    email_company: 'Company',
+    email_contact: 'AMD Internal Contact',
+    email_product: 'Product',
+    email_period: 'Period',
+    email_rank: 'Supplier Rank',
+    email_sec_avg: 'Section Average',
+    email_total: 'TOTAL AVERAGE SCORE',
+    email_comment_lbl: 'Comment',
+    email_note: 'NOTE: The Excel scorecard has been downloaded to your Downloads folder. Please attach it before sending.',
+    score_labels: ['N/A','Unacceptable','Unacceptable','Unacceptable','Below Expectations','Below Expectations','Meets Expectations','Meets Expectations','Above Expectations','Above Expectations','Industry Best'],
+    excel_sec_avg: 'Section Average',
+    excel_total: 'Total Score',
+    excel_col_q: 'Comments',
+    excel_col_r: 'Scores',
+  },
+  zh: {
+    title: 'AMD季度质量评分',
+    intro_p: '感谢您抽出宝贵时间完成本次调查。您的反馈有助于我们评估我们的绩效并确定需要改进的地方。请根据您在所选调查期内使用 AMD 的经历回答以下问题。如果某个问题不适用于你的组织，或者你没有足够的信息来回答，请选择"不适用 （N/A）"。',
+    rating_scale: '评级量表',
+    rating_desc: '请使用以下量表对每个项目的 AMD 绩效进行评分：<br>1-3：不可接受 - 性能明显低于预期<br>4-5：低于预期 - 需要改进<br>6-7：达到预期 - 可接受的性能<br>8-9：超出预期 - 超出预期<br>10：行业最佳 - 同类最佳性能<br><br>除非另有说明，否则评级应反映贵组织的期望和商定的要求。我们提供了可选的评论字段，以帮助我们更好地了解您的评分。具体的例子特别有价值',
+    section_respondent: '客户与受访者信息',
+    lbl_amd_contact: 'AMD内部联系人',
+    lbl_company: '贵公司：', err_company: '请回答问题 1 (贵公司：)，然后再继续。',
+    lbl_name: '您的姓名: ', err_name: '请回答问题 1 (您的姓名:)，然后再继续。',
+    lbl_email: '您的邮件地址:', err_email: '请回答问题 1 (您的邮件地址:)，然后再继续。', email_placeholder: '电子邮件',
+    lbl_title: '您的工作职级: ', err_title: '请回答问题 1 (您的工作职级:)，然后再继续。',
+    lbl_product: '产品', err_product: '请回答问题 1 (产品)，然后再继续。',
+    section_period: '请说明您的反馈所基于的季度和年份。',
+    lbl_quarter: '季度', err_quarter: '请回答问题 2 (季度)，然后再继续。',
+    lbl_year: '年份', err_year: '请回答问题 2 (年份)，然后再继续。',
+    rating_instruction: '评级量表：1-3 = 不可接受，4-5 = 低于预期，6-7 = 达到预期，8-9 = 超出预期，10 = 行业最佳。不适用 = 不适用。',
+    sec_avg: '本节平均分', no_scores: '暂无评分', criteria_scored: '项已评分',
+    err_section_field:   '请回答问题 4，然后再继续。',
+    err_section_rma:     '请回答问题 6，然后再继续。',
+    err_section_qm:      '请回答问题 8，然后再继续。',
+    err_section_overall: '请回答问题 10，然后再继续。',
+    err_section: '请在继续之前对本节至少一项标准进行评分。',
+    lbl_comment_field: '您是否有其他与客户终端质量表现，初期试产质量表现和量产质量表现相关的补充意见？',
+    lbl_comment_rma: '您是否有其他与退货和失效分析支持相关的补充意见？',
+    lbl_comment_qm: '您是否有其他与质量管理相关的补充意见？',
+    lbl_comment_overall: '请在此提供与整体质量相关的任何补充意见，并说明您给出该分数的主要原因。',
+    section_ranking: '在同类供应商中，您如何对 AMD 的质量进行排名？',
+    err_ranking: '请回答问题 11，然后再继续。',
+    rank_opts: ['第1名','第2名','第3名','第4名','第5名','第5名以后','不适用（N/A）'],
+    total_label: '总平均分',
+    submit_btn: '提交调查',  // exact from AMD feedback page
+    err_banner: '',
+    result_title: '感谢您完成AMD质量调查',
+    result_total: '总分',
+    result_detail: '评分详情',
+    result_comments: '您的评论',
+    result_ranking: '供应商排名：AMD在同类供应商中排名',
+    result_ranking2: '。',
+    comment_sections: {
+      field:   '客户终端质量表现，初期试产质量表现和量产质量表现',
+      rma:     '退货和失效分析支持',
+      qm:      '质量管理',
+      overall: '总体情况'
+    },
+    result_email_notice: "📧 <strong>您的电子邮件客户端应已打开</strong>，内含预填的结果。请在发送前<strong>附上已下载的.xlsx文件</strong>。如未自动打开，<a href='#' id='mailto-retry'>点击此处重试</a>。",
+    btn_edit: '← 修改回答',
+    btn_export: '📄 导出至Excel',
+    btn_print: '🖨 打印/保存PDF',
+    col_section: '部分', col_criterion: '评估标准', col_score: '评分',
+    email_title: 'AMD季度质量评审（QQR）— 调查结果',
+    email_submitted: '提交人',
+    email_company: '贵公司',
+    email_contact: 'AMD内部联系人',
+    email_product: '产品',
+    email_period: '调查期',
+    email_rank: '供应商排名',
+    email_sec_avg: '本节平均分',
+    email_total: '总平均分',
+    email_comment_lbl: '补充意见',
+    email_note: '注：Excel评分表已下载到您的"下载"文件夹，请在发送前将其附加到此电子邮件中。',
+    score_labels: ['不适用','不可接受','不可接受','不可接受','低于预期','低于预期','符合预期','符合预期','高于预期','高于预期','行业最佳'],
+    excel_sec_avg: '本节平均分',
+    excel_total: '总分',
+    excel_col_q: '补充意见',
+    excel_col_r: '评分',
+  },
+  ja: {
+    title: 'Quarterly AMD Quality Score',
+    intro_p: 'アンケートにご回答いただきありがとうございます。皆様からのフィードバックは、当社のパフォーマンスを評価し、改善の余地がある領域を特定するのに役立ちます。選択した調査期間中の AMD を使用した体験に基づいて、次の質問に回答してください。質問が組織に当てはまらない場合、または回答するのに十分な情報がない場合は、[該当なし (N/A)] を選択してください。',
+    rating_scale: '評価尺度',
+    rating_desc: '各項目について、次の尺度を使用して AMD のパフォーマンスを評価してください。<br>1-3: 許容できない - 期待を著しく下回るパフォーマンス<br>4-5: 期待を下回る - 改善が必要<br>6-7: 期待どおり - 許容可能なパフォーマンス<br>8-9: 期待を上回る - 期待を上回る<br>10: 業界最高 - クラス最高のパフォーマンス<br><br>特に指定がない限り、評価は組織の期待と合意された要件を反映する必要があります。オプションのコメント欄は、お客様の評価をより深く理解できるように提供されています。具体的な例は特に価値があります。',
+    section_respondent: 'お客様 および ご回答者情報',
+    lbl_amd_contact: 'AMD社内担当者',
+    lbl_company: '御社名', err_company: '続行する前に、質問 1 (御社名) に回答してください。',
+    lbl_name: 'お名前', err_name: '続行する前に、質問 1 (お名前) に回答してください。',
+    lbl_email: 'メールアドレス', err_email: '続行する前に、質問 1 (メールアドレス) に回答してください。', email_placeholder: '電子',
+    lbl_title: '役職', err_title: '続行する前に、質問 1 (役職) に回答してください。',
+    lbl_product: '製品', err_product: '続行する前に、質問 1 (製品) に回答してください。',
+    section_period: 'フィードバックの対象となる四半期と年を指定してください。',
+    lbl_quarter: '四半期', err_quarter: '続行する前に、質問 2 (四半期) に回答してください。',
+    lbl_year: '年', err_year: '続行する前に、質問 2 (年) に回答してください。',
+    rating_instruction: '評価尺度：1-3 = 許容不可、4-5 = 期待未満、6-7 = 期待通り、8-9 = 期待以上、10 = 業界最高。N/A = 該当なし。',
+    sec_avg: 'セクション平均', no_scores: 'まだ評価がありません', criteria_scored: '件評価済み',
+    err_section: '続行する前に、質問 4 に回答してください。',
+    err_section_field:   '続行する前に、質問 4 に回答してください。',
+    err_section_rma:     '続行する前に、質問 6 に回答してください。',
+    err_section_qm:      '続行する前に、質問 8 に回答してください。',
+    err_section_overall: '続行する前に、質問 10 に回答してください。',
+    lbl_comment_field: '市場 および 初期量産品質に関してコメントをいただけますでしょうか。',
+    lbl_comment_rma: 'RMAサポートに関してコメントをいただけますでしょうか。',
+    lbl_comment_qm: '品質管理に関してコメントをいただけますでしょうか。',
+    lbl_comment_overall: '総合品質とそのスコアの主な理由をここにご記入いただけますでしょうか。',
+    section_ranking: '同等のサプライヤーの中でAMDの品質をどのように順位付けされますでしょうか。',
+    err_ranking: '続行する前に、質問 11 に回答してください。',
+    rank_opts: ['1st','2nd','3rd','4th','5th','>5th','該当なし'],
+    total_label: '総合平均スコア',
+    submit_btn: 'アンケートの送信',
+    err_banner: '',
+    result_title: 'AMD品質アンケートへのご回答ありがとうございました',
+    result_total: '合計スコア',
+    result_detail: 'スコア詳細',
+    result_comments: 'コメント',
+    result_ranking: 'サプライヤーランキング：AMDは同等のサプライヤーの中で',
+    result_ranking2: 'にランク付けされました。',
+    comment_sections: {
+      field:   '市場 および 初期量産品質',
+      rma:     'RMAサポート（故障解析含む）',
+      qm:      '品質管理',
+      overall: '総合評価'
+    },
+    result_email_notice: "📧 <strong>メールクライアントが開いているはずです</strong>。送信前にダウンロードした.xlsxファイルを<strong>添付してください</strong>。自動的に開かない場合は<a href='#' id='mailto-retry'>こちらをクリック</a>してください。",
+    btn_edit: '← 回答を編集する',
+    btn_export: '📄 Excelにエクスポート',
+    btn_print: '🖨 印刷/PDFで保存',
+    col_section: 'セクション', col_criterion: '基準', col_score: 'スコア',
+    email_title: 'AMD四半期品質レビュー（QQR）— アンケート結果',
+    email_submitted: '回答者',
+    email_company: '御社名',
+    email_contact: 'AMD社内担当者',
+    email_product: '製品',
+    email_period: '調査期間',
+    email_rank: 'サプライヤーランキング',
+    email_sec_avg: 'セクション平均',
+    email_total: '総合平均スコア',
+    email_comment_lbl: 'コメント',
+    email_note: '注：Excelスコアカードがダウンロードフォルダに保存されました。送信前にこのメールに添付してください。',
+    score_labels: ['該当なし','許容不可','許容不可','許容不可','期待未満','期待未満','期待通り','期待通り','期待以上','期待以上','業界最高'],
+    excel_sec_avg: 'セクション平均',
+    excel_total: '合計スコア',
+    excel_col_q: 'コメント',
+    excel_col_r: 'スコア',
+  }
+};
+
+var SECTIONS_I18N = {
+  en: {
+    field: {
+      label: 'Field, Initial & Mass Production Quality',
+      crits: [
+        'The number of issues found by your end customers (field failures) versus expectations',
+        'The number of issues found during initial production (first 3 months, including samples) versus expectation',
+        'The number of issues found during mass production versus expectations',
+        'Component failure rate versus expectations'
+      ]
+    },
+    rma: {
+      label: 'RMA Support including FA',
+      crits: [
+        'Failure analysis root cause and corrective actions versus expectations',
+        'Failure analysis turnaround time versus expectations',
+        'RMA service (credit/replace) versus expectations'
+      ]
+    },
+    qm: {
+      label: 'Quality Management',
+      crits: [
+        'AMD responses to quality issues versus expectations',
+        'Containment action(s) are effective and provided in a timely manner',
+        'Continuous Improvement Plans are comprehensive and effective',
+        'Support of errata / PCNs / Qual reports / Documentation versus expectations',
+        "Regular quality review meetings versus customer's expectation"
+      ]
+    },
+    overall: {
+      label: 'Overall',
+      crits: [
+        'How do you rate AMD component quality? Please include the primary reason for your score in the overall quality comments section below.',
+        'Overall, how does AMD quality compare to similar suppliers?'
+      ]
+    }
+  },
+  zh: {
+    field: {
+      label: '客户终端质量表现，初期试产质量表现和量产质量表现',
+      crits: [
+        '最终客户发现的问题数量（终端故障）与预期比较',
+        '初期试产期间（前 3 个月，包括样品）发现的问题数量与预期比较',
+        '量产过程中发现的问题数量与预期比较',
+        'AMD 产品故障率与预期比较'
+      ]
+    },
+    rma: {
+      label: '退货和失效分析支持',
+      crits: [
+        '故障分析根本原因和纠正措施与预期比较',
+        '故障分析时间周期与预期比较',
+        '退货服务（退款/更换）与预期比较'
+      ]
+    },
+    qm: {
+      label: '质量管理',
+      crits: [
+        'AMD 对质量问题的回应与预期比较',
+        '防范措施有效且及时',
+        '持续改进计划全面且有效',
+        '勘误表/项目变更通知/质量报告/技术文档的支持与预期比较',
+        '定期举行的质量审查会议与客户的期望比较'
+      ]
+    },
+    overall: {
+      label: '总体情况',
+      crits: [
+        '您如何评价 AMD 产品的质量？请在下方整体质量评语栏中说明您给出该分数的主要原因。',
+        '总体而言，AMD 的产品质量与同类供应商相比如何？'
+      ]
+    }
+  },
+  ja: {
+    field: {
+      label: '市場 および 初期量産品質',
+      crits: [
+        'エンドユーザーで発見された問題数（市場故障）はご期待に沿うものでしたでしょうか。',
+        '初期生産（最初の3か月、サンプル含む）で発見された問題数はご期待に沿うものでしたでしょうか。（コメント欄に不良率をご提供いただけますでしょうか。）',
+        'お客様の量産製造ラインで発見された問題数はご期待に沿うものでしたでしょうか。（コメント欄に不良率をご提供いただけますでしょうか。）',
+        '部品故障率はご期待に沿うものでしたでしょうか。（コメント欄に不良率をご提供いただけますでしょうか。）'
+      ]
+    },
+    rma: {
+      label: 'RMAサポート（故障解析含む）',
+      crits: [
+        '不具合原因解析とそれに対する改善対策はご期待に沿うものでしたでしょうか。',
+        'RMAサイクルタイム（解析のご依頼から最終レポート発行まで）はご要求を満たしておりますでしょうか。',
+        'RMAのクレジット対応や代替品入れ替え対応はご期待沿うものでしたでしょうか。'
+      ]
+    },
+    qm: {
+      label: '品質管理',
+      crits: [
+        'AMDの品質問題に対する情報提供はご要求を満たしておりますでしょうか。',
+        '暫定対策は必要なタイミングでかつ効果的に実施されておりますでしょうか。',
+        '継続改善対策は包括的かつ効果的に実施されておりますでしょうか。',
+        'Errata, PCN, 信頼性試験等のドキュメント、製品変更プロセスはご要求を満たしておりますでしょうか。',
+        '品質定例会の内容はご期待に沿うものでしたでしょうか。'
+      ]
+    },
+    overall: {
+      label: '総合評価',
+      crits: [
+        'AMD製品の品質をどのように評価されますでしょうか。下記の総合品質コメント欄に主な理由のご記入をお願いいたします。',
+        '総合的に他の半導体サプライヤー様製品の品質と比較してのご評価はいかがでしょうか。'
+      ]
+    }
+  }
+};
+
+// ── Language selection ────────────────────────────────────────
+function selectLang(lang) {
+  LANG = lang;
+  document.getElementById('lang-screen').style.display = 'none';
+  document.getElementById('survey-form').style.display = '';
+  applyTranslations(lang);
+  // Update active switcher button
+  ['en','zh','ja'].forEach(function(l) {
+    var btn = document.getElementById('sw-'+l);
+    if (btn) btn.classList.toggle('active', l === lang);
+  });
+  // Rebuild sliders with translated criteria
+  rebuildSliders(lang);
+  updateLiveAverages();
+}
+
+function applyTranslations(lang) {
+  var t = T[lang];
+  // Page title
+  document.title = t.title;
+  // H1
+  var h1 = document.querySelector('h1.section-heading');
+  if (h1) h1.textContent = t.title;
+  // Intro block
+  var introPara = document.querySelector('.text-block p:first-child');
+  if (introPara) introPara.textContent = t.intro_p;
+  var introStrong = document.querySelector('.text-block strong');
+  if (introStrong) introStrong.textContent = t.rating_scale;
+  var introDesc = document.querySelector('.text-block p:last-child');
+  if (introDesc) introDesc.innerHTML = t.rating_desc;
+  // Respondent section
+  setText('q_section_respondent', t.section_respondent);
+  if (t.lbl_amd_contact) setLabel('q_amd_contact', t.lbl_amd_contact);
+  setLabel('q_company', t.lbl_company); setErrText('err_company', t.err_company);
+  setLabel('q_name',    t.lbl_name);    setErrText('err_name',    t.err_name);
+  setLabel('q_email',   t.lbl_email);   setErrText('err_email',   t.err_email);
+  var emailInput = document.getElementById('q_email');
+  if (emailInput && t.email_placeholder) emailInput.placeholder = t.email_placeholder;
+  setLabel('q_title',   t.lbl_title);   setErrText('err_title',   t.err_title);
+  setLabel('q_product', t.lbl_product); setErrText('err_product', t.err_product);
+  // Period section
+  setText('q_section_period', t.section_period);
+  setLabel('q_quarter', t.lbl_quarter); setErrText('err_quarter', t.err_quarter);
+  setLabel('q_year',    t.lbl_year);    setErrText('err_year',    t.err_year);
+  // Section headings and avg labels
+  ['field','rma','qm','overall'].forEach(function(id) {
+    var secData = SECTIONS_I18N[lang][id];
+    setText('sec_heading_'+id, secData.label);
+    setInnerHTML('sec_instruction_'+id, t.rating_instruction);
+    setText('avg_label_'+id, t.sec_avg);
+    // Use per-section error if defined, otherwise fall back to generic
+    var secErr = t['err_section_'+id] || t.err_section;
+    setErrText('err_'+id, secErr);
+  });
+  // Comment labels
+  setText('lbl_comment_field',   t.lbl_comment_field);
+  setText('lbl_comment_rma',     t.lbl_comment_rma);
+  setText('lbl_comment_qm',      t.lbl_comment_qm);
+  setText('lbl_comment_overall', t.lbl_comment_overall);
+  // Ranking
+  setText('section_ranking', t.section_ranking);
+  setErrText('err_ranking', t.err_ranking);
+  var rankSel = document.getElementById('q_ranking');
+  if (rankSel) {
+    var vals = ['','1','2','3','4','5','6','7'];
+    for (var i=1; i<rankSel.options.length; i++) {
+      rankSel.options[i].text = t.rank_opts[i-1];
+    }
+  }
+  // Total bar
+  setText('total_bar_label', t.total_label);
+  // Submit / error banner
+  var submitBtn = document.getElementById('btn-submit');
+  if (submitBtn) submitBtn.textContent = t.submit_btn;
+  setInnerHTML('err-banner', t.err_banner);
+  // Results panel
+  setText('result_title_h2', t.result_title);
+  setText('result_total_lbl', t.result_total);
+  setText('result_detail_h5', t.result_detail);
+  setText('result_comments_h5', t.result_comments);
+  // Buttons
+  var btnEdit = document.getElementById('btn-edit');
+  if (btnEdit) btnEdit.textContent = t.btn_edit;
+  var btnExport = document.getElementById('btn-export');
+  if (btnExport) btnExport.textContent = t.btn_export;
+  var btnPrint = document.getElementById('btn-print');
+  if (btnPrint) btnPrint.textContent = t.btn_print;
+  // Notice
+  setInnerHTML('email-notice', t.result_email_notice);
+}
+
+function setText(id, txt) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = txt;
+}
+function setInnerHTML(id, html) {
+  var el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
+function setLabel(inputId, txt) {
+  var lbl = document.querySelector('label[for="'+inputId+'"]');
+  if (lbl) {
+    // Preserve the * span
+    var star = lbl.querySelector('.text-danger');
+    lbl.textContent = txt + ' ';
+    if (star) lbl.appendChild(star);
+  }
+}
+function setErrText(id, txt) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = txt;
+}
+
+function rebuildSliders(lang) {
+  SECTIONS.forEach(function(sec, si) {
+    var secData = SECTIONS_I18N[lang][sec.id];
+    // Update section heading
+    sec.label = secData.label;
+    var container = document.getElementById('sliders_'+sec.id);
+    if (!container) return;
+    // Remove existing slider rows
+    var existing = container.querySelectorAll('.slider-row');
+    existing.forEach(function(el) { el.remove(); });
+    // Rebuild with translated criteria
+    sec.crits = secData.crits;
+    sec.crits.forEach(function(crit, i) {
+      var key = sec.id+'_'+i;
+      var currentVal = sliderValues[key] !== undefined ? sliderValues[key] : 0;
+      var div = document.createElement('div');
+      div.className = 'slider-row';
+      div.innerHTML = '<div class="slider-label">'+crit+'</div>'
+        + '<div class="slider-wrap"><div>'
+        + '<input type="range" class="score-slider" id="sl_'+key+'" min="0" max="10" step="1" value="'+currentVal+'">'
+        + '<div class="scale-labels"><span>N/A</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>'
+        + '</div><div class="score-display '+(currentVal===0?'score-na':scoreClass(currentVal))+'" id="disp_'+key+'">'+(currentVal===0?'N/A':currentVal)+'</div></div>';
+      container.appendChild(div);
+      var slider = document.getElementById('sl_'+key);
+      var disp   = document.getElementById('disp_'+key);
+      sliderValues[key] = currentVal;
+      updateSliderTrack(slider);
+      slider.addEventListener('input', function() {
+        var v = parseInt(slider.value);
+        sliderValues[key] = v;
+        disp.textContent = v === 0 ? 'N/A' : String(v);
+        disp.className = 'score-display';
+        disp.style.background = colorForVal(v);
+        updateSliderTrack(slider);
+        updateLiveAverages();
+      });
+    });
+  });
+}
+
+const SECTIONS = [
+  {id:'field', label:'Field, Initial & Mass Production Quality', crits:[
+    'The number of issues found by your end customers (field failures) versus expectations',
+    'The number of issues found during initial production (first 3 months, including samples) versus expectation',
+    'The number of issues found during mass production versus expectations',
+    'Component failure rate versus expectations'
+  ]},
+  {id:'rma', label:'RMA Support including FA', crits:[
+    'Failure analysis root cause and corrective actions versus expectations',
+    'Failure analysis turnaround time versus expectations',
+    'RMA service (credit/replace) versus expectations'
+  ]},
+  {id:'qm', label:'Quality Management', crits:[
+    'AMD responses to quality issues versus expectations',
+    'Containment action(s) are effective and provided in a timely manner',
+    'Continuous Improvement Plans are comprehensive and effective',
+    'Support of errata / PCNs / Qual reports / Documentation versus expectations',
+    "Regular quality review meetings versus customer's expectation"
+  ]},
+  {id:'overall', label:'Overall', crits:[
+    'How do you rate AMD component quality? Please include the primary reason for your score in the overall quality comments section below.',
+    'Overall, how does AMD quality compare to similar suppliers?'
+  ]}
+];
+
+const sliderValues = {};
+
+function scoreClass(v) {
+  if (v === 0) return 'score-na';
+  if (v <= 3)  return 'score-bad';   // red
+  if (v <= 5)  return 'score-low';   // yellow
+  if (v <= 7)  return 'score-mid';   // green
+  if (v <= 9)  return 'score-high';  // blue
+  return 'score-best';               // purple
+}
+function scoreLabel(v) { return v === 0 ? 'N/A' : String(v); }
+function colorForVal(v) {
+  if (!v || v === 0) return '#aaa';
+  if (v <= 3) return '#e74c3c';   // red — unacceptable
+  if (v <= 5) return '#f1c40f';   // yellow — below expectations
+  if (v <= 7) return '#4E95D9';   // green — meets expectations
+  if (v <= 9) return '#4EA72E';   // blue — above expectations
+  return '#196B24';               // purple — industry best
+}
+function updateSliderTrack(slider) {
+  var v = parseInt(slider.value);
+  if (v === 0) { slider.style.background = '#ddd'; return; }
+  var pct = (v / 10) * 100, c = colorForVal(v);
+  slider.style.background = 'linear-gradient(to right,' + c + ' 0%,' + c + ' ' + pct + '%,#ddd ' + pct + '%,#ddd 100%)';
+}
+function calcSecAvg(sec) {
+  const vals = sec.crits.map((_,i) => sliderValues[sec.id+'_'+i])
+    .filter(v => v !== undefined && v > 0).map(Number);
+  return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
+}
+function updateLiveAverages() {
+  SECTIONS.forEach(sec => {
+    const avg   = calcSecAvg(sec);
+    const badge = document.getElementById('avg_'+sec.id);
+    const note  = document.getElementById('avg_'+sec.id+'_note');
+    const scored = sec.crits.filter((_,i) => (sliderValues[sec.id+'_'+i]||0) > 0).length;
+    if (avg === null) {
+      badge.textContent = 'N/A'; badge.style.background = '#ccc';
+      note.textContent = 'No scores yet';
+    } else {
+      badge.textContent = avg.toFixed(1); badge.style.background = colorForVal(avg);
+      note.textContent = `${scored} of ${sec.crits.length} criteria scored`;
+    }
+  });
+  const secAvgs  = SECTIONS.map(sec => calcSecAvg(sec)).filter(v => v !== null);
+  const totalAvg = secAvgs.length ? secAvgs.reduce((a,b) => a+b, 0) / secAvgs.length : null;
+  const totalEl  = document.getElementById('live-total');
+  if (totalAvg === null) { totalEl.textContent = '—'; totalEl.style.color = '#FFC000'; }
+  else { totalEl.textContent = totalAvg.toFixed(1); totalEl.style.color = colorForVal(totalAvg); }
+}
+
+// Build sliders
+SECTIONS.forEach(sec => {
+  const container = document.getElementById('sliders_'+sec.id);
+  sec.crits.forEach((crit, i) => {
+    const key = sec.id+'_'+i;
+    sliderValues[key] = 0;
+    const div = document.createElement('div');
+    div.className = 'slider-row';
+    div.innerHTML = `
+      <div class="slider-label">${crit}</div>
+      <div class="slider-wrap">
+        <div>
+          <input type="range" class="score-slider" id="sl_${key}" min="0" max="10" step="1" value="0">
+          <div class="scale-labels">
+            <span>N/A</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+            <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+          </div>
+        </div>
+        <div class="score-display" id="disp_${key}" style="background:#888;">N/A</div>
+      </div>`;
+    container.appendChild(div);
+    const slider = document.getElementById('sl_'+key);
+    const disp   = document.getElementById('disp_'+key);
+    updateSliderTrack(slider);
+    slider.addEventListener('input', () => {
+      const v = parseInt(slider.value);
+      sliderValues[key] = v;
+      disp.textContent = scoreLabel(v);
+      disp.className = 'score-display';
+      disp.style.background = colorForVal(v);
+      updateSliderTrack(slider);
+      updateLiveAverages();
+    });
+  });
+});
+updateLiveAverages();
+
+// Validation helpers
+function showErr(id, show) {
+  var el = document.getElementById(id);
+  if (el) el.style.display = show ? 'block' : 'none';
+}
+function isEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+function getVal(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+function getTxt(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+function validate() {
+  var ok = true;
+  function hide(id) { showErr(id, false); }
+  function fail(id) { showErr(id, true); ok = false; }
+
+  getTxt('q_company') ? hide('err_company') : fail('err_company');
+  getTxt('q_name')    ? hide('err_name')    : fail('err_name');
+  var em = getTxt('q_email');
+  (em && isEmail(em)) ? hide('err_email') : fail('err_email');
+  var amdContact = getTxt('q_amd_contact');
+  (amdContact && isEmail(amdContact) && amdContact.toLowerCase().indexOf('@amd.com') !== -1) ? hide('err_amd_contact') : fail('err_amd_contact');
+  getTxt('q_title')   ? hide('err_title')  : fail('err_title');
+  getVal('q_product') ? hide('err_product'): fail('err_product');
+  getVal('q_quarter') ? hide('err_quarter'): fail('err_quarter');
+  getVal('q_year')    ? hide('err_year')   : fail('err_year');
+
+  for (var s = 0; s < SECTIONS.length; s++) {
+    var sec = SECTIONS[s];
+    var anyScored = false;
+    for (var ci = 0; ci < sec.crits.length; ci++) {
+      if ((sliderValues[sec.id+'_'+ci]||0) > 0) { anyScored = true; break; }
+    }
+    anyScored ? hide('err_'+sec.id) : fail('err_'+sec.id);
+  }
+
+  ['field','rma','qm','overall'].forEach(function(id) { hide('err_comment_'+id); });
+  getVal('q_ranking') ? hide('err_ranking') : fail('err_ranking');
+
+  return ok;
+}
+
+function handleSubmit() {
+  try {
+    document.getElementById('err-banner').style.display = 'none';
+    var ok = validate();
+    if (!ok) {
+      document.getElementById('err-banner').style.display = 'block';
+      var first = document.querySelector('.validation-message[style*="block"]');
+      if (first) first.scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+    renderResults();
+    document.getElementById('survey-form').style.display = 'none';
+    document.getElementById('results-panel').style.display = 'block';
+    window.scrollTo({top:0, behavior:'smooth'});
+  } catch(e) {
+    alert('Error: ' + e.message + '\n\nPlease contact support.');
+  }
+}
+
+function renderResults() {
+  const name    = document.getElementById('q_name').value.trim();
+  const company = document.getElementById('q_company').value.trim();
+  const quarter = document.getElementById('q_quarter').value;
+  const year    = document.getElementById('q_year').value;
+  const product = document.getElementById('q_product').value;
+  const rankVal = document.getElementById('q_ranking').value;
+  const rankMap = {'1':'1st','2':'2nd','3':'3rd','4':'4th','5':'5th','6':'>5th','7':'N/A'};
+
+  document.getElementById('r-meta').textContent = `${name} · ${company} · ${product} · ${quarter} ${year}`;
+
+  const avgs      = SECTIONS.map(sec => ({...sec, avg: calcSecAvg(sec)}));
+  const validAvgs = avgs.filter(s => s.avg !== null).map(s => s.avg);
+  const total     = validAvgs.length ? validAvgs.reduce((a,b) => a+b, 0) / validAvgs.length : null;
+
+  document.getElementById('r-total').textContent = total !== null ? total.toFixed(1) : '—';
+  document.getElementById('r-total').style.color  = colorForVal(total);
+
+  const cardsEl = document.getElementById('r-section-cards');
+  cardsEl.innerHTML = '';
+  avgs.forEach(s => {
+    const col = document.createElement('div');
+    col.className = 'col-md-3 col-6';
+    col.innerHTML = `<div class="score-card">
+      <div class="sc-label">${s.label}</div>
+      <div class="sc-value" style="color:${colorForVal(s.avg)}">${s.avg !== null ? s.avg.toFixed(1) : '—'}</div>
+    </div>`;
+    cardsEl.appendChild(col);
+  });
+
+  const tbody = document.getElementById('r-detail-body');
+  tbody.innerHTML = '';
+  avgs.forEach(sec => {
+    sec.crits.forEach((crit, i) => {
+      const v  = sliderValues[sec.id+'_'+i];
+      const tr = document.createElement('tr');
+      if (i === 0) {
+        const td = document.createElement('td');
+        td.rowSpan = sec.crits.length;
+        td.style.cssText = 'font-weight:700;font-size:12px;vertical-align:middle;';
+        td.textContent = sec.label;
+        tr.appendChild(td);
+      }
+      const tdC = document.createElement('td'); tdC.style.fontSize = '12px'; tdC.textContent = crit; tr.appendChild(tdC);
+      const tdS = document.createElement('td'); tdS.style.textAlign = 'center';
+      const lbl = v === 0 ? 'N/A' : String(v);
+      const bg  = v === 0 ? '#aaa' : colorForVal(v);
+      tdS.innerHTML = `<span style="background:${bg};color:#fff;font-weight:700;padding:2px 10px;border-radius:4px;">${lbl}</span>`;
+      tr.appendChild(tdS); tbody.appendChild(tr);
+    });
+  });
+
+  const commEl = document.getElementById('r-comments');
+  commEl.innerHTML = '';
+  const t = T[LANG];
+  const cs = (t && t.comment_sections) ? t.comment_sections : {
+    field:'Field, Initial & Mass Production Quality', rma:'RMA Support including FA',
+    qm:'Quality Management', overall:'Overall'
+  };
+  [{id:'field',label:cs.field},{id:'rma',label:cs.rma},
+   {id:'qm',label:cs.qm},{id:'overall',label:cs.overall}].forEach(s => {
+    const txt = document.getElementById('q_comment_'+s.id).value.trim();
+    if (!txt) return;
+    const div = document.createElement('div'); div.className = 'comment-result';
+    div.innerHTML = `<div class="cr-section">${s.label}</div><p style="margin:0;font-size:13px;">${txt.replace(/\n/g,'<br>')}</p>`;
+    commEl.appendChild(div);
+  });
+
+  // Supplier ranking line — translated
+  const rankingEl = document.getElementById('r-ranking');
+  if (rankingEl) rankingEl.textContent = rankMap[rankVal] || rankVal;
+  const rankLine = document.getElementById('r-ranking-line');
+  if (rankLine && t) {
+    rankLine.innerHTML = '<strong>' + (t.result_ranking||'Supplier Ranking: AMD ranked') + '</strong> <span id="r-ranking" style="font-weight:700;color:#ED1C24;">' + (rankMap[rankVal]||rankVal) + '</span> ' + (t.result_ranking2||'among comparable suppliers.');
+  }
+
+  // Download Excel first, then open email (slight delay so download triggers cleanly)
+  var xlsxFilename = 'QQR_' + (company||'Survey').replace(/\s+/g,'_') + '_' + quarter + year + '.xlsx';
+  exportCSV();   // triggers download
+  setTimeout(function() {
+    sendResultsEmail(name, company, quarter, year, product, avgs, total, rankMap[rankVal] || rankVal, xlsxFilename);
+  }, 800);
+}
+
+function sendResultsEmail(name, company, quarter, year, product, avgs, total, ranking, xlsxFilename) {
+  var submitterEmail = document.getElementById('q_email').value.trim();
+  var adminEmail     = document.getElementById('q_amd_contact') ? document.getElementById('q_amd_contact').value.trim() : '';
+
+  function scoreZone(v) {
+    if (!v || v === 0) return 'N/A';
+    if (v <= 3) return v.toFixed(1) + ' — Unacceptable';
+    if (v <= 5) return v.toFixed(1) + ' — Below Expectations';
+    if (v <= 7) return v.toFixed(1) + ' — Meets Expectations';
+    if (v <= 9) return v.toFixed(1) + ' — Above Expectations';
+    return v.toFixed(1) + ' — Industry Best';
+  }
+
+  var amdContactEmail = document.getElementById('q_amd_contact') ? document.getElementById('q_amd_contact').value.trim() : '';
+
+  var tl2 = T[LANG];
+  var cs3 = (tl2 && tl2.comment_sections) ? tl2.comment_sections : {};
+
+  function scoreStr(v) { return (v === 0 || v === undefined) ? 'N/A' : String(v); }
+  function avgStr(avg) { return (avg === null || avg === undefined) ? 'N/A' : avg.toFixed(1); }
+  var D = ' | '; // pipe delimiter — survives email encoding
+
+  var tEmail = T[LANG] || T['en'];
+  var cs4 = (tEmail.comment_sections) || {field:'Field, Initial & Mass Production Quality',rma:'RMA Support including FA',qm:'Quality Management',overall:'Overall'};
+
+  function scoreLabel2(v) {
+    var sl = tEmail.score_labels || T['en'].score_labels;
+    if (!v || v === 0) return sl[0];
+    return v + ' — ' + sl[v];
+  }
+
+  var lines = [];
+  lines.push(tEmail.email_title || T['en'].email_title);
+  lines.push('='.repeat(60));
+  lines.push('');
+  lines.push((tEmail.email_submitted||'Submitted by')     + '         : ' + name);
+  lines.push((tEmail.email_company||'Company')            + '              : ' + company);
+  lines.push((tEmail.email_contact||'AMD Internal Contact') + ' : ' + amdContactEmail);
+  lines.push((tEmail.email_product||'Product')            + '              : ' + product);
+  lines.push((tEmail.email_period||'Period')              + '               : ' + quarter + ' ' + year);
+  lines.push((tEmail.email_rank||'Supplier Rank')         + '        : ' + ranking);
+  lines.push('');
+
+  avgs.forEach(function(sec) {
+    var secLabel = cs4[sec.id] || cs3[sec.id] || sec.label;
+    var cmt = (document.getElementById('q_comment_' + sec.id) || {value:''}).value.trim() || '';
+    var freshAvg = calcSecAvg(sec);
+    var secCrits = (SECTIONS_I18N[LANG] && SECTIONS_I18N[LANG][sec.id]) ? SECTIONS_I18N[LANG][sec.id].crits : sec.crits;
+
+    lines.push('─'.repeat(60));
+    lines.push(secLabel.toUpperCase());
+    lines.push('─'.repeat(60));
+
+    sec.crits.forEach(function(crit, i) {
+      var translatedCrit = (secCrits && secCrits[i]) ? secCrits[i] : crit;
+      var cleanCrit = translatedCrit.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+      var v = sliderValues[sec.id + '_' + i];
+      lines.push('  • ' + cleanCrit);
+      lines.push('    ' + (tEmail.col_score||'Score') + ': ' + scoreLabel2(v));
+    });
+
+    lines.push('');
+    if (cmt) {
+      lines.push('  ' + (tEmail.email_comment_lbl||'Comment') + ': ' + cmt);
+      lines.push('');
+    }
+    lines.push('  ' + (tEmail.email_sec_avg||'Section Average') + ': ' + (freshAvg !== null ? avgStr(freshAvg) : (tEmail.score_labels ? tEmail.score_labels[0] : 'N/A')));
+  });
+
+  lines.push('');
+  lines.push('═'.repeat(60));
+  lines.push((tEmail.email_total||'TOTAL AVERAGE SCORE') + ': ' + avgStr(total !== undefined ? total : null));
+  lines.push('═'.repeat(60));
+  lines.push('');
+  lines.push(tEmail.email_note || ('NOTE: The Excel scorecard (' + xlsxFilename + ') has been downloaded to your Downloads folder. Please attach it before sending.'));
+  lines.push('');
+  lines.push('(c) ' + new Date().getFullYear() + ' Advanced Micro Devices, Inc.');
+
+  var subject = 'AMD QQR Survey Results — ' + company + ' — ' + quarter + ' ' + year;
+  var body    = lines.join('\n');
+  var mailto  = 'mailto:' + encodeURIComponent(submitterEmail) + ';' + encodeURIComponent(adminEmail)
+              + '?subject=' + encodeURIComponent(subject)
+              + '&body=' + encodeURIComponent(body);
+
+  var notice = document.getElementById('email-notice');
+  var tNotice = T[LANG];
+  var noticeHtml = (tNotice && tNotice.result_email_notice)
+    ? tNotice.result_email_notice.replace("href='#'", 'href="' + mailto + '"')
+    : '📧 <strong>Your email client should have opened</strong> with pre-filled results. Please <strong>attach the downloaded .xlsx file</strong> before sending. If it didn\'t open, <a href="' + mailto + '" id="mailto-retry">click here to try again</a>.';
+  if (notice) notice.innerHTML = noticeHtml;
+
+  window._lastMailto = mailto;
+  setTimeout(function() { window.location.href = mailto; }, 400);
+}
+
+// Helper: convert Uint8Array to base64 string
+function bytesToBase64(bytes) {
+  var binary = '';
+  var len = bytes.byteLength;
+  for (var i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+// Wrapper: generate xlsx bytes without triggering a download
+function generateXlsxBytes(avgs, total, name, company, email, title, product, quarter, year, ranking) {
+  // Re-use all the xlsx building logic but return bytes instead of downloading
+  var period = quarter + ' ' + year;
+  var SCORE_COL = {0:'O', 1:'E', 2:'F', 3:'G', 4:'H', 5:'I', 6:'J', 7:'K', 8:'L', 9:'M', 10:'N'};
+  var SCORE_ROWS = {
+    'field_0':10,'field_1':11,'field_2':12,'field_3':13,
+    'rma_0':15,'rma_1':16,'rma_2':17,
+    'qm_0':19,'qm_1':20,'qm_2':21,'qm_3':22,'qm_4':23,
+    'overall_0':25,'overall_1':26
+  };
+  var AVG_ROWS = {'field':14,'rma':18,'qm':24,'overall':27};
+  var SEC_LABELS = {
+    field:   {row:10, label:'Field, Initial & Mass Production Quality'},
+    rma:     {row:15, label:'RMA Support including FA'},
+    qm:      {row:19, label:'Quality Management'},
+    overall: {row:25, label:'Overall'}
+  };
+
+  function xe(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function cell(ref,val,type,style){
+    var s=style?' s="'+style+'"':'';
+    if(type==='f') return '<c r="'+ref+'"'+s+'><f>'+xe(val)+'</f></c>';
+    if(type==='n') return '<c r="'+ref+'"'+s+'><v>'+xe(val)+'</v></c>';
+    return '<c r="'+ref+'" t="str"'+s+'><v>'+xe(val)+'</v></c>';
+  }
+  var rowHeights={2:28.8,8:40.0};for(var rh3=9;rh3<=29;rh3++)rowHeights[rh3]=28.8;
+  function buildRow(rn,cells){
+    var ht=rowHeights[rn];
+    var htAttr=ht?' ht="'+ht+'" customHeight="1"':'';
+    var xml='<row r="'+rn+'"'+htAttr+'>';
+    Object.keys(cells).sort().forEach(function(col){
+      var d=cells[col];
+      xml+=cell(col+rn,d.v,d.t||'s',d.s||'');
+    });
+    return xml+'</row>';
+  }
+
+  var rows=[];
+  var ALL_COLS=['C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'];
+  var XFS={HDR:2,NUM:11,SEC:5,AVG:6,TLB:7,TVL:8,PB:9,BLD:1,RED:13,YEL:14,GRN:15,BLU:16,PRP:17,BC:18,PC:19,BR:20,BRBK:21,BTMBRD:22,BRBKL:23,NBB:24,SLC:25};
+
+  rows.push(buildRow(1,{Q:{v:'How would you rank AMD quality compared to similar suppliers?',s:XFS.PB},R:{v:'Rank',s:XFS.BLD}}));
+  rows.push(buildRow(2,{R:{v:ranking,s:XFS.PB}}));
+  rows.push(buildRow(3,{C:{v:'Survey Time Period:',s:XFS.BLD},D:{v:period,s:XFS.PB}}));
+  rows.push(buildRow(4,{C:{v:'Company Name:',s:XFS.BLD},D:{v:company,s:XFS.PB}}));
+  rows.push(buildRow(5,{C:{v:'Customer Name:',s:XFS.BLD},D:{v:name,s:XFS.PB}}));
+  rows.push(buildRow(6,{C:{v:'Customer Email:',s:XFS.BLD},D:{v:email,s:XFS.PB}}));
+  rows.push(buildRow(7,{C:{v:'Job Title:',s:XFS.BLD},D:{v:title,s:XFS.PB}}));
+
+  var row8={};ALL_COLS.forEach(function(c){row8[c]={v:'',s:XFS.HDR};});
+  row8['E']={v:'Unacceptable',s:XFS.HDR};row8['H']={v:'Below Expectation',s:XFS.HDR};
+  row8['J']={v:'Meeting Expectation',s:XFS.HDR};row8['L']={v:'Above Expectation',s:XFS.HDR};
+  row8['N']={v:'Industry Best',s:XFS.HDR};row8['O']={v:'Not Applicable',s:XFS.HDR};
+  row8['Q']={v:'Comments',s:XFS.HDR};row8['R']={v:'Scores',s:XFS.HDR};
+  rows.push(buildRow(8,row8));
+
+  var row9={};ALL_COLS.forEach(function(c){row9[c]={v:'',s:XFS.PB};});
+  ['E','F','G','H','I','J','K','L','M','N'].forEach(function(c,i){row9[c]={v:String(i+1),t:'n',s:XFS.NUM};});
+  row9['O']={v:'N/A',s:XFS.NUM};
+  rows.push(buildRow(9,row9));
+
+  avgs.forEach(function(sec){
+    var info=SEC_LABELS[sec.id];
+    var cmt=(document.getElementById('q_comment_'+sec.id)||{value:''}).value||'';
+    sec.crits.forEach(function(crit,i){
+      var rn=SCORE_ROWS[sec.id+'_'+i];
+      var val=sliderValues[sec.id+'_'+i]||0;
+      var col=SCORE_COL[val]||'O';
+      var rc={};
+      ALL_COLS.forEach(function(c){rc[c]={v:'',s:XFS.PB};});
+      if(i===0){rc['C']={v:info.label,s:25};}else{rc['C']={v:'',s:26};}
+      rc['D']={v:crit,s:XFS.PB};
+      var scoreSt=(val===10)?XFS.PRP:(val>=8)?XFS.BLU:(val>=6)?XFS.GRN:(val>=4)?XFS.YEL:(val>=1)?XFS.RED:XFS.PC;
+      rc[col]={v:val===0?'0':String(val),t:'n',s:scoreSt};
+      rc['R']={v:String(val),t:'n',s:scoreSt};
+      if(i===0&&cmt.trim()) rc['Q']={v:cmt.trim(),s:XFS.PB};
+      rows.push(buildRow(rn,rc));
+    });
+    var avgRow=AVG_ROWS[sec.id];
+    var fr=SCORE_ROWS[sec.id+'_0'];
+    var lr=SCORE_ROWS[sec.id+'_'+(sec.crits.length-1)];
+    var ac={};ALL_COLS.forEach(function(c){ac[c]={v:'',s:XFS.PB};});
+    var freshSecAvg=calcSecAvg(sec);
+    var secAvgVal=(freshSecAvg!==null&&freshSecAvg!==undefined)?parseFloat(freshSecAvg.toFixed(1)):'';
+    var secAvgSt=(secAvgVal==='')?XFS.AVG:(secAvgVal===10)?XFS.PRP:(secAvgVal>=8)?XFS.BLU:(secAvgVal>=6)?XFS.GRN:(secAvgVal>=4)?XFS.YEL:XFS.RED;
+    var isLastSec=(sec.id==='overall');
+    var acLblSt=isLastSec?XFS.BRBKL:XFS.BR;
+    var acAnchorSt=isLastSec?27:XFS.PB;
+    ac['C']={v:'',s:acAnchorSt};
+    ['D','E','F','G','H','I','J','K','L','M','N','O','P'].forEach(function(c){delete ac[c];});
+    ac['Q']={v:'Section Average',s:acLblSt};
+    ac['R']={v:secAvgVal===''?'':String(secAvgVal),t:secAvgVal===''?'s':'n',s:secAvgSt};
+    rows.push(buildRow(avgRow,ac));
+  });
+
+  // Row 28: explicit C28 with no border to avoid inheriting bottom border from C27 merge
+  var r28={};r28['C']={v:'',s:0};rows.push(buildRow(28,r28));
+
+  var r29={};
+  ['C','D','E','F','G','H','I','J','K','L','M','N','O','P'].forEach(function(c){r29[c]={v:'',s:0};});
+  r29['Q']={v:'',s:XFS.PB};r29['R']={v:'',s:XFS.PB};
+  var gbTots=SECTIONS.map(function(s){return calcSecAvg(s);}).filter(function(v){return v!==null&&v!==undefined;});
+  var gbTotal=gbTots.length?gbTots.reduce(function(a,b){return a+b;},0)/gbTots.length:null;
+  var gbTotalVal=(gbTotal!==null&&gbTotal!==undefined)?parseFloat(gbTotal.toFixed(1)):'';
+  var gbTotSt=(gbTotalVal==='')?XFS.TVL:(gbTotalVal===10)?XFS.PRP:(gbTotalVal>=8)?XFS.BLU:(gbTotalVal>=6)?XFS.GRN:(gbTotalVal>=4)?XFS.YEL:XFS.RED;
+  r29['Q']={v:'Total Score',s:XFS.BC};
+  r29['R']={v:gbTotalVal===''?'':String(gbTotalVal),t:gbTotalVal===''?'s':'n',s:gbTotSt};
+  rows.push(buildRow(29,r29));
+
+  var rowsH=rows; // heights embedded directly in buildRow
+
+  var colWidths='<cols>'
+    +'<col min="1" max="1" width="8.78" customWidth="1"/>'
+    +'<col min="3" max="3" width="18.78" customWidth="1"/>'
+    +'<col min="4" max="4" width="74.78" customWidth="1"/>'
+    +'<col min="5" max="15" width="7.0" customWidth="1"/>'
+    +'<col min="16" max="16" width="4.22" customWidth="1"/>'
+    +'<col min="17" max="17" width="85.22" customWidth="1"/>'
+    +'<col min="18" max="18" width="9.22" customWidth="1"/>'
+    +'</cols>';
+
+  var mergeCells2='<mergeCells count="16">'
+    +'<mergeCell ref="E8:G8"/>'
+    +'<mergeCell ref="H8:I8"/>'
+    +'<mergeCell ref="J8:K8"/>'
+    +'<mergeCell ref="L8:M8"/>'
+    +'<mergeCell ref="Q10:Q13"/>'
+    +'<mergeCell ref="Q15:Q17"/>'
+    +'<mergeCell ref="Q19:Q23"/>'
+    +'<mergeCell ref="Q25:Q26"/>'
+    +'<mergeCell ref="C14:P14"/>'
+    +'<mergeCell ref="C18:P18"/>'
+    +'<mergeCell ref="C24:P24"/>'
+    +'<mergeCell ref="C27:P27"/>'
+    +'<mergeCell ref="C10:C13"/>'
+    +'<mergeCell ref="C15:C17"/>'
+    +'<mergeCell ref="C19:C23"/>'
+    +'<mergeCell ref="C25:C26"/>'
+    +'</mergeCells>';
+
+  var sheetXml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    +'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    +colWidths+'<sheetData>'+rowsH.join('')+'</sheetData>'
+    +mergeCells2+'</worksheet>';
+
+  var wbXml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    +'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+    +' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+    +'<sheets><sheet name="QQR Results" sheetId="1" r:id="rId1"/></sheets></workbook>';
+
+  var ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    +'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    +'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    +'<Default Extension="xml" ContentType="application/xml"/>'
+    +'<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+    +'<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+    +'<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+    +'</Types>';
+
+  var rootRels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    +'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    +'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+    +'</Relationships>';
+
+  var wbRels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    +'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    +'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+    +'<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+    +'</Relationships>';
+
+  var files=[
+    {name:'[Content_Types].xml',data:ct},
+    {name:'_rels/.rels',data:rootRels},
+    {name:'xl/workbook.xml',data:wbXml},
+    {name:'xl/_rels/workbook.xml.rels',data:wbRels},
+    {name:'xl/styles.xml',data:buildStyles()},
+    {name:'xl/worksheets/sheet1.xml',data:sheetXml}
+  ];
+
+  return buildZipFromFiles(files);
+}
+
+// ── Styles index constants ─────────────────────────────────────
+// These map to cellXfs entries in styles.xml (defined in buildStyles())
+var XF = {
+  DEFAULT:     0,  // plain
+  BOLD:        1,  // bold text
+  HEADER_DARK: 2,  // dark bg, white bold text, border
+  YELLOW:      3,  // yellow fill, border (input cell)
+  YELLOW_BOLD: 4,  // yellow fill, bold, border
+  SEC_LABEL:   5,  // bold, light blue fill, border
+  AVG_CELL:    6,  // green fill, bold, border
+  TOTAL_LABEL: 7,  // gold fill, bold, right-aligned, border
+  TOTAL_VAL:   8,  // gold fill, bold, centered, border
+  PLAIN_BORDER:9,  // plain with border
+  INSTR:      10,  // italic, yellow text (instruction row)
+  NUMBER_HDR: 11,  // centered, border, light gray bg
+  TOP_BORDER:  12, // top border only
+  X_RED:       13, // x cell — unacceptable (1-3)
+  X_YELLOW:    14, // x cell — below expectations (4-5)
+  X_GREEN:     15, // x cell — meets expectations (6-7)
+  X_BLUE:      16, // x cell — above expectations (8-9)
+  X_PURPLE:    17, // x cell — industry best (10)
+  BOLD_CENTER:  18, // bold + centered, no fill, border
+  PLAIN_CENTER: 19, // plain + centered, no fill, border (for score=0)
+  BOLD_RIGHT:        20, // bold + right-aligned, border
+  BOLD_RIGHT_BOTTOM:   21, // bold + right-aligned, bottom border only
+  BOTTOM_BORDER:       22, // no fill, bottom border only (for C27 merge anchor)
+  BOLD_RIGHT_BTM_LEFT: 23, // bold + right-aligned, bottom+left border (for Q27)
+  NO_BOTTOM_BORDER:    24, // plain border minus bottom (for C27 merge anchor)
+  SEC_LABEL_CENTER:    25, // section label with center alignment and left border
+  LEFT_ONLY:           26, // left border only (for intermediate merged C cells)
+  TOP_RIGHT_ONLY:      27, // top+right border, no left/bottom (for C27 anchor)
+};
+
+function buildStyles() {
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+  + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+
+  // Fonts: 0=default(11pt), 1=bold(11pt), 2=white bold(11pt), 3=bold dark(10pt)
+  + '<fonts count="4">'
+  +   '<font><sz val="11"/><name val="Calibri"/></font>'
+  +   '<font><sz val="11"/><b/><name val="Calibri"/></font>'
+  +   '<font><sz val="11"/><b/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
+  +   '<font><sz val="10"/><b/><color rgb="FF1F3864"/><name val="Calibri"/></font>'
+  + '</fonts>'
+
+  // Fills: 0=none, 1=gray125, 2=yellow, 3=blue-gray, 4=green, 5=gold, 6=light-blue, 7=light-gray
+  //        8=red(unacceptable), 9=yellow(below), 10=green(meets), 11=blue(above), 12=purple(best)
+  + '<fills count="13">'
+  +   '<fill><patternFill patternType="none"/></fill>'
+  +   '<fill><patternFill patternType="gray125"/></fill>'
+  +   '<fill><patternFill patternType="solid"><fgColor rgb="FFFFFF00"/></patternFill></fill>'
+  +   '<fill><patternFill patternType="solid"><fgColor rgb="FF1F3864"/></patternFill></fill>'
+  +   '<fill><patternFill patternType="solid"><fgColor rgb="FF92D050"/></patternFill></fill>'
+  +   '<fill><patternFill patternType="solid"><fgColor rgb="FFFFC000"/></patternFill></fill>'
+  +   '<fill><patternFill patternType="solid"><fgColor rgb="FFDCE6F1"/></patternFill></fill>'
+  +   '<fill><patternFill patternType="solid"><fgColor rgb="FFD9D9D9"/></patternFill></fill>'
+  +   '<fill><patternFill patternType="solid"><fgColor rgb="FFE74C3C"/></patternFill></fill>'
+  +   '<fill><patternFill patternType="solid"><fgColor rgb="FFF1C40F"/></patternFill></fill>'
+  +   '<fill><patternFill patternType="solid"><fgColor rgb="FF4E95D9"/></patternFill></fill>'
+  +   '<fill><patternFill patternType="solid"><fgColor rgb="FF4EA72E"/></patternFill></fill>'
+  +   '<fill><patternFill patternType="solid"><fgColor rgb="FF196B24"/></patternFill></fill>'
+  + '</fills>'
+
+  // Borders: 0=none, 1=thin all around, 2=top only, 3=bottom only, 4=bottom+left
+  + '<borders count="8">'
+  +   '<border><left/><right/><top/><bottom/><diagonal/></border>'
+  +   '<border>'
+  +     '<left style="thin"><color rgb="FF000000"/></left>'
+  +     '<right style="thin"><color rgb="FF000000"/></right>'
+  +     '<top style="thin"><color rgb="FF000000"/></top>'
+  +     '<bottom style="thin"><color rgb="FF000000"/></bottom>'
+  +     '<diagonal/>'
+  +   '</border>'
+  +   '<border>'
+  +     '<left/><right/>'
+  +     '<top style="thin"><color rgb="FF000000"/></top>'
+  +     '<bottom/><diagonal/>'
+  +   '</border>'
+  +   '<border>'
+  +     '<left/><right/><top/>'
+  +     '<bottom style="thin"><color rgb="FF000000"/></bottom>'
+  +     '<diagonal/>'
+  +   '</border>'
+  +   '<border>'
+  +     '<left style="thin"><color rgb="FF000000"/></left>'
+  +     '<right/><top/>'
+  +     '<bottom style="thin"><color rgb="FF000000"/></bottom>'
+  +     '<diagonal/>'
+  +   '</border>'
+  +   '<border>'
+  +     '<left style="thin"><color rgb="FF000000"/></left>'
+  +     '<right style="thin"><color rgb="FF000000"/></right>'
+  +     '<top style="thin"><color rgb="FF000000"/></top>'
+  +     '<bottom/>'
+  +     '<diagonal/>'
+  +   '</border>'
+  +   '<border>'
+  +     '<left style="thin"><color rgb="FF000000"/></left>'
+  +     '<right/>'
+  +     '<top style="thin"><color rgb="FF000000"/></top>'
+  +     '<bottom style="thin"><color rgb="FF000000"/></bottom>'
+  +     '<diagonal/>'
+  +   '</border>'
+  +   '<border>'
+  +     '<left style="thin"><color rgb="FF000000"/></left>'
+  +     '<right/><top/><bottom/><diagonal/>'
+  +   '</border>'
+  +   '<border>'
+  +     '<left/><right/>'
+  +     '<top style="thin"><color rgb="FF000000"/></top>'
+  +     '<bottom/><diagonal/>'
+  +   '</border>'
+  + '</borders>'
+
+  + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+
+  // cellXfs (indexed by XF constants above):
+  // 0  DEFAULT      font0 fill0 border0
+  // 1  BOLD         font1 fill0 border0
+  // 2  HEADER_DARK  font2 fill3 border1  (dark bg, white bold)
+  // 3  YELLOW       font0 fill2 border1  (yellow input)
+  // 4  YELLOW_BOLD  font1 fill2 border1
+  // 5  SEC_LABEL    font3 fill6 border1  (light-blue bg, dark bold)
+  // 6  AVG_CELL     font2 fill4 border1  (green bg, white bold)
+  // 7  TOTAL_LABEL  font1 fill5 border1  (gold, bold, right-align)
+  // 8  TOTAL_VAL    font1 fill5 border1  (gold, bold, center)
+  // 9  PLAIN_BORDER font0 fill0 border1
+  // 10 INSTR        font0 fill2 border0  (yellow bg instruction)
+  // 11 NUMBER_HDR   font0 fill7 border1  (light gray, centered)
+  + '<cellXfs count="28">'
+  +   '<xf xfId="0" numFmtId="0" fontId="0" fillId="0" borderId="0"/>'                                                    // 0 DEFAULT
+  +   '<xf xfId="0" numFmtId="0" fontId="1" fillId="0" borderId="1"><alignment wrapText="1"/></xf>'                       // 1 BOLD
+  +   '<xf xfId="0" numFmtId="0" fontId="2" fillId="3" borderId="1"><alignment horizontal="center" wrapText="1"/></xf>'   // 2 HEADER_DARK
+  +   '<xf xfId="0" numFmtId="0" fontId="0" fillId="2" borderId="1"><alignment wrapText="1"/></xf>'                       // 3 YELLOW
+  +   '<xf xfId="0" numFmtId="0" fontId="1" fillId="2" borderId="1"><alignment wrapText="1"/></xf>'                       // 4 YELLOW_BOLD
+  +   '<xf xfId="0" numFmtId="0" fontId="3" fillId="6" borderId="1"><alignment wrapText="1"/></xf>'                       // 5 SEC_LABEL
+  +   '<xf xfId="0" numFmtId="0" fontId="2" fillId="4" borderId="1"><alignment horizontal="center"/></xf>'                // 6 AVG_CELL
+  +   '<xf xfId="0" numFmtId="0" fontId="1" fillId="5" borderId="1"><alignment horizontal="right"/></xf>'                 // 7 TOTAL_LABEL
+  +   '<xf xfId="0" numFmtId="0" fontId="1" fillId="5" borderId="1"><alignment horizontal="center"/></xf>'                // 8 TOTAL_VAL
+  +   '<xf xfId="0" numFmtId="0" fontId="0" fillId="0" borderId="1"><alignment wrapText="1"/></xf>'                       // 9 PLAIN_BORDER
+  +   '<xf xfId="0" numFmtId="0" fontId="0" fillId="2" borderId="0"><alignment wrapText="1" shrinkToFit="1"/></xf>'       // 10 INSTR
+  +   '<xf xfId="0" numFmtId="0" fontId="0" fillId="7" borderId="1"><alignment horizontal="center"/></xf>'                // 11 NUMBER_HDR
+  +   '<xf xfId="0" numFmtId="0" fontId="0" fillId="0" borderId="2"/>'                                                    // 12 TOP_BORDER
+  +   '<xf xfId="0" numFmtId="0" fontId="1" fillId="8"  borderId="1"><alignment horizontal="center"/></xf>'               // 13 X_RED
+  +   '<xf xfId="0" numFmtId="0" fontId="1" fillId="9"  borderId="1"><alignment horizontal="center"/></xf>'               // 14 X_YELLOW
+  +   '<xf xfId="0" numFmtId="0" fontId="1" fillId="10" borderId="1"><alignment horizontal="center"/></xf>'               // 15 X_GREEN
+  +   '<xf xfId="0" numFmtId="0" fontId="1" fillId="11" borderId="1"><alignment horizontal="center"/></xf>'               // 16 X_BLUE
+  +   '<xf xfId="0" numFmtId="0" fontId="2" fillId="12" borderId="1"><alignment horizontal="center"/></xf>'               // 17 X_PURPLE
+  +   '<xf xfId="0" numFmtId="0" fontId="1" fillId="0"  borderId="1"><alignment horizontal="center"/></xf>'               // 18 BOLD_CENTER
+  +   '<xf xfId="0" numFmtId="0" fontId="0" fillId="0"  borderId="1"><alignment horizontal="center"/></xf>'               // 19 PLAIN_CENTER
+  +   '<xf xfId="0" numFmtId="0" fontId="1" fillId="0"  borderId="1"><alignment horizontal="right"/></xf>'                // 20 BOLD_RIGHT
+  +   '<xf xfId="0" numFmtId="0" fontId="1" fillId="0"  borderId="3"><alignment horizontal="right"/></xf>'                // 21 BOLD_RIGHT_BOTTOM
+  +   '<xf xfId="0" numFmtId="0" fontId="0" fillId="0"  borderId="3"/>'                                                    // 22 BOTTOM_BORDER
+  +   '<xf xfId="0" numFmtId="0" fontId="1" fillId="0"  borderId="4"><alignment horizontal="right"/></xf>'                // 23 BOLD_RIGHT_BTM_LEFT
+  +   '<xf xfId="0" numFmtId="0" fontId="0" fillId="0"  borderId="5"/>'                                                    // 24 NO_BOTTOM_BORDER
+  +   '<xf xfId="0" numFmtId="0" fontId="3" fillId="6"  borderId="6"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>'  // 25 SEC_LABEL_CENTER
+  +   '<xf xfId="0" numFmtId="0" fontId="0" fillId="6"  borderId="7"/>'                                                                     // 26 LEFT_ONLY
+  +   '<xf xfId="0" numFmtId="0" fontId="0" fillId="6"  borderId="8"/>'                                                                     // 27 TOP_RIGHT_ONLY (C27 no left border)
+  + '</cellXfs>'
+  + '</styleSheet>';
+}
+
+// ── xlsx export matching AMD QQR template format ───────────────
+function exportCSV() {
+  var name    = document.getElementById('q_name').value.trim();
+  var company = document.getElementById('q_company').value.trim();
+  var email   = document.getElementById('q_email').value.trim();
+  var title   = document.getElementById('q_title').value.trim();
+  var product = document.getElementById('q_product').value;
+  var quarter = document.getElementById('q_quarter').value;
+  var year    = document.getElementById('q_year').value;
+  var rankVal = document.getElementById('q_ranking').value;
+  var rankMap = {'1':'1st','2':'2nd','3':'3rd','4':'4th','5':'5th','6':'>5th','7':'N/A'};
+  var avgs    = SECTIONS.map(function(sec){ return Object.assign({}, sec, {avg: calcSecAvg(sec)}); });
+  var tots    = avgs.filter(function(s){ return s.avg !== null; }).map(function(s){ return s.avg; });
+  var total   = tots.length ? tots.reduce(function(a,b){return a+b;},0)/tots.length : null;
+  var ranking = rankMap[rankVal] || rankVal;
+  var period  = quarter + ' ' + year;
+
+  // Score value -> column letter (matches template: E=1, F=2 ... N=10, O=N/A)
+  var SCORE_COL = {0:'O', 1:'E', 2:'F', 3:'G', 4:'H', 5:'I', 6:'J', 7:'K', 8:'L', 9:'M', 10:'N'};
+
+  // (section_id, crit_index) -> row number (matches template exactly)
+  var SCORE_ROWS = {
+    'field_0':10, 'field_1':11, 'field_2':12, 'field_3':13,
+    'rma_0':15,   'rma_1':16,   'rma_2':17,
+    'qm_0':19,    'qm_1':20,    'qm_2':21,    'qm_3':22, 'qm_4':23,
+    'overall_0':25, 'overall_1':26
+  };
+
+  // Section average rows
+  var AVG_ROWS = {'field':14, 'rma':18, 'qm':24, 'overall':27};
+  // Section weights from template (col B)
+  var WEIGHTS  = {'field':0.28, 'rma':0.21, 'qm':0.35, 'overall':0.16};
+
+  // ── Build SpreadsheetML XML (native xlsx XML format) ──────────
+  function xe(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function cell(ref, val, type, style) {
+    // type: 's'=string, 'n'=number, ''=formula
+    var t = type === 'n' ? '' : ' t="str"';
+    var s = style ? ' s="' + style + '"' : '';
+    if (type === 'f') {
+      return '<c r="' + ref + '"' + s + '><f>' + xe(val) + '</f></c>';
+    }
+    if (type === 'n') {
+      return '<c r="' + ref + '"' + s + '><v>' + xe(val) + '</v></c>';
+    }
+    return '<c r="' + ref + '" t="str"' + s + '><v>' + xe(val) + '</v></c>';
+  }
+
+  // ── Row heights defined here so buildRow can reference them ──
+  var rowHeights = {2:28.8, 8:40.0};
+  for (var rh2 = 9; rh2 <= 29; rh2++) rowHeights[rh2] = 28.8;
+
+  // Build a row array indexed by col letter; return XML row
+  function buildRow(rn, cells) {
+    var ht = rowHeights[rn];
+    var htAttr = ht ? ' ht="' + ht + '" customHeight="1"' : '';
+    var xml = '<row r="' + rn + '"' + htAttr + '>';
+    Object.keys(cells).sort().forEach(function(col) {
+      var d = cells[col];
+      xml += cell(col + rn, d.v, d.t || 's', d.s || '');
+    });
+    xml += '</row>';
+    return xml;
+  }
+
+  var rows = [];
+
+  // Row 1: rank header only
+  rows.push(buildRow(1, {
+    Q: {v:'How would you rank AMD quality compared to similar suppliers? (1 = best, 2 = second, 3 = third and so on)', s:XF.PLAIN_BORDER},
+    R: {v:'Rank', s:XF.BOLD}
+  }));
+
+  // Row 2: ranking answer
+  rows.push(buildRow(2, {
+    R: {v: ranking, s:XF.PLAIN_BORDER}
+  }));
+
+  // Rows 3-7: respondent info
+  rows.push(buildRow(3, {C:{v:'Survey Time Period:', s:XF.BOLD}, D:{v: period, s:XF.PLAIN_BORDER}}));
+  rows.push(buildRow(4, {C:{v:'Company Name: ',     s:XF.BOLD}, D:{v: company, s:XF.PLAIN_BORDER}}));
+  rows.push(buildRow(5, {C:{v:'Customer Name: ',    s:XF.BOLD}, D:{v: name, s:XF.PLAIN_BORDER}}));
+  rows.push(buildRow(6, {C:{v:'Customer Email: ',   s:XF.BOLD}, D:{v: email, s:XF.PLAIN_BORDER}}));
+  rows.push(buildRow(7, {C:{v:'Job Title: ',        s:XF.BOLD}, D:{v: title, s:XF.PLAIN_BORDER}}));
+
+  // Row 8: column headers (dark background — all cols C-R)
+  var row8 = {};
+  ['C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'].forEach(function(c){ row8[c]={v:'',s:XF.HEADER_DARK}; });
+  row8['E'] = {v:'Unacceptable',        s:XF.HEADER_DARK};
+  row8['H'] = {v:'Below Expectation',   s:XF.HEADER_DARK};
+  row8['J'] = {v:'Meeting Expectation', s:XF.HEADER_DARK};
+  row8['L'] = {v:'Above Expectation',   s:XF.HEADER_DARK};
+  row8['N'] = {v:'Industry Best',       s:XF.HEADER_DARK};
+  row8['O'] = {v:'Not Applicable',      s:XF.HEADER_DARK};
+  var tXl = T[LANG] || T['en'];
+  row8['Q'] = {v: tXl.excel_col_q || 'Comments', s:XF.HEADER_DARK};
+  row8['R'] = {v: tXl.excel_col_r || 'Scores',   s:XF.HEADER_DARK};
+  rows.push(buildRow(8, row8));
+
+  // Row 9: score numbers (light gray centered) — all cols C-R bordered
+  var row9 = {};
+  ['C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'].forEach(function(c){ row9[c]={v:'',s:XF.PLAIN_BORDER}; });
+  row9['E']={v:'1', t:'n',s:XF.NUMBER_HDR}; row9['F']={v:'2', t:'n',s:XF.NUMBER_HDR};
+  row9['G']={v:'3', t:'n',s:XF.NUMBER_HDR}; row9['H']={v:'4', t:'n',s:XF.NUMBER_HDR};
+  row9['I']={v:'5', t:'n',s:XF.NUMBER_HDR}; row9['J']={v:'6', t:'n',s:XF.NUMBER_HDR};
+  row9['K']={v:'7', t:'n',s:XF.NUMBER_HDR}; row9['L']={v:'8', t:'n',s:XF.NUMBER_HDR};
+  row9['M']={v:'9', t:'n',s:XF.NUMBER_HDR}; row9['N']={v:'10',t:'n',s:XF.NUMBER_HDR};
+  row9['O']={v:'N/A', s:XF.NUMBER_HDR};
+  rows.push(buildRow(9, row9));
+
+  // Section label rows and crit rows
+  var SEC_LABELS = {
+    field:   {row:10, label:'Field, Initial & Mass Production Quality',  weight:0.28},
+    rma:     {row:15, label:'RMA Support including FA',                   weight:0.21},
+    qm:      {row:19, label:'Quality Management',                          weight:0.35},
+    overall: {row:25, label:'Overall',                                     weight:0.16}
+  };
+
+  // All columns that should have borders in data rows
+  var ALL_COLS = ['C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'];
+
+  SECTIONS.forEach(function(sec) {
+    var info = SEC_LABELS[sec.id];
+    var cmt  = (document.getElementById('q_comment_' + sec.id) || {value:''}).value || '';
+
+    sec.crits.forEach(function(crit, i) {
+      var rn  = SCORE_ROWS[sec.id + '_' + i];
+      var val = sliderValues[sec.id + '_' + i] || 0;
+      var col = SCORE_COL[val] || 'O';
+      var rowCells = {};
+
+      // Fill every column B–R with a bordered empty cell first
+      ALL_COLS.forEach(function(c) { rowCells[c] = {v:'', s:XF.PLAIN_BORDER}; });
+
+      // Section label on first crit row; left-border-only on subsequent rows for C column merge
+      if (i === 0) {
+        rowCells['C'] = {v: info.label, s:XF.SEC_LABEL_CENTER};
+      } else {
+        rowCells['C'] = {v: '', s:XF.LEFT_ONLY};
+      }
+      rowCells['D'] = {v: crit, s:XF.PLAIN_BORDER};
+
+      // Score column (col) and R both show the score with color background
+      var scoreStyle = (val === 10) ? XF.X_PURPLE
+                     : (val >= 8)  ? XF.X_BLUE
+                     : (val >= 6)  ? XF.X_GREEN
+                     : (val >= 4)  ? XF.X_YELLOW
+                     : (val >= 1)  ? XF.X_RED
+                     : XF.PLAIN_CENTER;
+      rowCells[col] = {v: val === 0 ? '0' : String(val), t: 'n', s: scoreStyle};
+      rowCells['R'] = {v: String(val), t: 'n', s: scoreStyle};
+
+      // Comment on first row of section
+      if (i === 0 && cmt.trim()) rowCells['Q'] = {v: cmt.trim(), s:XF.PLAIN_BORDER};
+
+      rows.push(buildRow(rn, rowCells));
+    });
+
+// Section average row — full border across all cols
+    var avgRow = AVG_ROWS[sec.id];
+    var firstScoreRow = SCORE_ROWS[sec.id + '_0'];
+    var lastScoreRow  = SCORE_ROWS[sec.id + '_' + (sec.crits.length - 1)];
+    var avgCells = {};
+    ALL_COLS.forEach(function(c) { avgCells[c] = {v:'', s:XF.PLAIN_BORDER}; });
+    // Merged C:P — only write C (top-left); delete D-P; Q gets the label
+    var isLast = (sec.id === 'overall');
+    var avgLabelStyle = isLast ? XF.BOLD_RIGHT_BTM_LEFT : XF.BOLD_RIGHT;
+    // C27: no left or bottom border; others use plain border
+    var avgMergeAnchorStyle = isLast ? XF.TOP_RIGHT_ONLY : XF.PLAIN_BORDER;
+    avgCells['C'] = {v: '', s: avgMergeAnchorStyle};
+    ['D','E','F','G','H','I','J','K','L','M','N','O','P'].forEach(function(c){ delete avgCells[c]; });
+    avgCells['Q'] = {v: (tXl.excel_sec_avg || 'Section Average'), s: avgLabelStyle};
+    var freshAvg = calcSecAvg(sec);
+    var avgVal = (freshAvg !== null && freshAvg !== undefined) ? parseFloat(freshAvg.toFixed(1)) : '';
+    var avgScoreStyle = (avgVal === '') ? XF.PLAIN_BORDER
+                      : (avgVal === 10) ? XF.X_PURPLE
+                      : (avgVal >= 8)  ? XF.X_BLUE
+                      : (avgVal >= 6)  ? XF.X_GREEN
+                      : (avgVal >= 4)  ? XF.X_YELLOW
+                      : XF.X_RED;
+    avgCells['R'] = {v: avgVal === '' ? '' : String(avgVal), t: avgVal === '' ? 's' : 'n', s: avgScoreStyle};
+    rows.push(buildRow(avgRow, avgCells));
+  });
+
+  // Row 28: explicit C28 with no style to remove top border inherited from C27
+  var row28 = {};row28['C'] = {v:'', s:XF.DEFAULT};rows.push(buildRow(28, row28));
+
+  // Row 29: Total Score (gold — full border across all cols)
+  var row29 = {};
+  ['C','D','E','F','G','H','I','J','K','L','M','N','O','P'].forEach(function(c){ row29[c]={v:'',s:XF.DEFAULT}; });
+  row29['Q'] = {v: (tXl.excel_total || 'Total Score'), s:XF.BOLD_CENTER};
+  row29['R'] = {v:'', s:XF.PLAIN_BORDER};
+  var freshTots = SECTIONS.map(function(s){ return calcSecAvg(s); }).filter(function(v){ return v !== null && v !== undefined; });
+  var freshTotal = freshTots.length ? freshTots.reduce(function(a,b){return a+b;},0)/freshTots.length : null;
+  var totalVal = (freshTotal !== null && freshTotal !== undefined) ? parseFloat(freshTotal.toFixed(1)) : '';
+  var totalScoreStyle = (totalVal === '') ? XF.TOTAL_VAL
+                       : (totalVal === 10) ? XF.X_PURPLE
+                       : (totalVal >= 8)  ? XF.X_BLUE
+                       : (totalVal >= 6)  ? XF.X_GREEN
+                       : (totalVal >= 4)  ? XF.X_YELLOW
+                       : XF.X_RED;
+  row29['R'] = {v: totalVal === '' ? '' : String(totalVal), t: totalVal === '' ? 's' : 'n', s: totalScoreStyle};
+  rows.push(buildRow(29, row29));
+
+  // ── Column widths (matching template exactly) ─────────────────
+  // Cols: A=8.78, B=3.22, C=18.78, D=74.78, E=6.55, F-M=8.43(default),
+  //       N=10.78, O=11.0, P=4.22, Q=85.22, R=9.22
+  var colWidths = '<cols>'
+    + '<col min="1"  max="1"  width="8.78"  customWidth="1"/>'
+    + '<col min="3"  max="3"  width="18.78" customWidth="1"/>'
+    + '<col min="4"  max="4"  width="74.78" customWidth="1"/>'
+    + '<col min="5"  max="15" width="7.0"   customWidth="1"/>'
+    + '<col min="16" max="16" width="4.22"  customWidth="1"/>'
+    + '<col min="17" max="17" width="85.22" customWidth="1"/>'
+    + '<col min="18" max="18" width="9.22"  customWidth="1"/>'
+    + '</cols>';
+
+  // Row heights are embedded directly in buildRow (defined above)
+  var rowsWithHeights = rows;
+
+  // ── Assemble SpreadsheetML ────────────────────────────────────
+  var mergeCells = '<mergeCells count="16">'
+    + '<mergeCell ref="E8:G8"/>'
+    + '<mergeCell ref="H8:I8"/>'
+    + '<mergeCell ref="J8:K8"/>'
+    + '<mergeCell ref="L8:M8"/>'
+    + '<mergeCell ref="Q10:Q13"/>'
+    + '<mergeCell ref="Q15:Q17"/>'
+    + '<mergeCell ref="Q19:Q23"/>'
+    + '<mergeCell ref="Q25:Q26"/>'
+    + '<mergeCell ref="C14:P14"/>'
+    + '<mergeCell ref="C18:P18"/>'
+    + '<mergeCell ref="C24:P24"/>'
+    + '<mergeCell ref="C27:P27"/>'
+    + '<mergeCell ref="C10:C13"/>'
+    + '<mergeCell ref="C15:C17"/>'
+    + '<mergeCell ref="C19:C23"/>'
+    + '<mergeCell ref="C25:C26"/>'
+    + '</mergeCells>';
+
+  var sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+  + '<sheetFormatPr defaultRowHeight="28.8" customHeight="1" x14ac:dyDescent="0.25" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac"/>'
+    + colWidths
+    + '<sheetData>' + rowsWithHeights.join('') + '</sheetData>'
+    + mergeCells
+    + '</worksheet>';
+
+  var wbXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+    + ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+    + '<sheets><sheet name="QQR Results" sheetId="1" r:id="rId1"/></sheets>'
+    + '</workbook>';
+
+  var ct = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    + '<Default Extension="xml"  ContentType="application/xml"/>'
+    + '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+    + '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+    + '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+    + '</Types>';
+
+  var rootRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+    + '</Relationships>';
+
+  var wbRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+    + '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+    + '</Relationships>';
+
+  var files = [
+    {name:'[Content_Types].xml',         data: ct},
+    {name:'_rels/.rels',                  data: rootRels},
+    {name:'xl/workbook.xml',              data: wbXml},
+    {name:'xl/_rels/workbook.xml.rels',   data: wbRels},
+    {name:'xl/styles.xml',                data: buildStyles()},
+    {name:'xl/worksheets/sheet1.xml',     data: sheetXml}
+  ];
+
+  var zip  = buildZipFromFiles(files);
+  var blob = new Blob([zip], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href   = url;
+  a.download = 'QQR_' + (company||'Survey').replace(/\s+/g,'_') + '_' + quarter + year + '.xlsx';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ── Minimal ZIP builder (store, no compression) ────────────────
+function buildZipFromFiles(files) {
+  function toBytes(str) {
+    var enc = new TextEncoder();
+    return enc.encode(str);
+  }
+  function u16(n){ return [(n)&0xff,(n>>8)&0xff]; }
+  function u32(n){ return [(n)&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff]; }
+
+  function crc32(data) {
+    if (!crc32._t) {
+      crc32._t = new Uint32Array(256);
+      for (var i=0;i<256;i++){var c=i;for(var j=0;j<8;j++)c=c&1?(0xEDB88320^(c>>>1)):(c>>>1);crc32._t[i]=c;}
+    }
+    var crc=0xFFFFFFFF;
+    for(var i=0;i<data.length;i++) crc=crc32._t[(crc^data[i])&0xff]^(crc>>>8);
+    return (crc^0xFFFFFFFF)>>>0;
+  }
+
+  function concat(parts) {
+    var len=0; for(var i=0;i<parts.length;i++) len+=parts[i].length;
+    var out=new Uint8Array(len),pos=0;
+    for(var i=0;i<parts.length;i++){out.set(parts[i],pos);pos+=parts[i].length;}
+    return out;
+  }
+  function fromArr(a){ return new Uint8Array(a); }
+
+  var localParts=[], centralParts=[], offset=0;
+
+  files.forEach(function(f) {
+    var nameBytes = toBytes(f.name);
+    var data      = toBytes(f.data);
+    var crc       = crc32(data);
+    var sz        = data.length;
+
+    var local = concat([
+      fromArr([0x50,0x4B,0x03,0x04]),
+      fromArr(u16(20)), fromArr(u16(0)), fromArr(u16(0)),
+      fromArr(u16(0)),  fromArr(u16(0)),
+      fromArr(u32(crc)), fromArr(u32(sz)), fromArr(u32(sz)),
+      fromArr(u16(nameBytes.length)), fromArr(u16(0)),
+      nameBytes, data
+    ]);
+    var central = concat([
+      fromArr([0x50,0x4B,0x01,0x02]),
+      fromArr(u16(20)), fromArr(u16(20)), fromArr(u16(0)), fromArr(u16(0)),
+      fromArr(u16(0)),  fromArr(u16(0)),
+      fromArr(u32(crc)), fromArr(u32(sz)), fromArr(u32(sz)),
+      fromArr(u16(nameBytes.length)), fromArr(u16(0)), fromArr(u16(0)),
+      fromArr(u16(0)), fromArr(u16(0)), fromArr(u32(0)),
+      fromArr(u32(offset)), nameBytes
+    ]);
+    localParts.push(local);
+    centralParts.push(central);
+    offset += local.length;
+  });
+
+  var cdSize = centralParts.reduce(function(a,c){return a+c.length;},0);
+  var eocd = concat([
+    fromArr([0x50,0x4B,0x05,0x06]),
+    fromArr(u16(0)), fromArr(u16(0)),
+    fromArr(u16(files.length)), fromArr(u16(files.length)),
+    fromArr(u32(cdSize)), fromArr(u32(offset)),
+    fromArr(u16(0))
+  ]);
+
+  return concat(localParts.concat(centralParts).concat([eocd]));
+}
+
+function downloadXlsx_UNUSED(sheets, filename) {
+  return; // removed — replaced by buildZipFromFiles above
+  // Collect all unique strings for shared strings table
+  var strings = [], strIdx = {};
+  function strId(s) {
+    var k = String(s);
+    if (strIdx[k] === undefined) { strIdx[k] = strings.length; strings.push(k); }
+    return strIdx[k];
+  }
+
+  // Build worksheet XML for each sheet
+  function sheetXml(rows) {
+    var xml = '<?xml version="1.0" encoding="UTF-8"?>'
+      + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+  + '<sheetFormatPr defaultRowHeight="28.8" customHeight="1" x14ac:dyDescent="0.25" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac"/>'
+      + '<sheetData>';
+    rows.forEach(function(row, ri) {
+      if (!row || row.length === 0) { return; }
+      xml += '<row r="'+(ri+1)+'">';
+      row.forEach(function(cell, ci) {
+        var col = colName(ci);
+        var ref = col + (ri+1);
+        if (cell === null || cell === undefined || cell === '') {
+          xml += '<c r="'+ref+'"/>';
+        } else if (typeof cell === 'number') {
+          xml += '<c r="'+ref+'" t="n"><v>'+cell+'</v></c>';
+        } else {
+          var si = strId(cell);
+          xml += '<c r="'+ref+'" t="s"><v>'+si+'</v></c>';
+        }
+      });
+      xml += '</row>';
+    });
+    xml += '</sheetData></worksheet>';
+    return xml;
+  }
+
+  function colName(n) {
+    var s = '';
+    n++;
+    while (n > 0) { n--; s = String.fromCharCode(65 + (n%26)) + s; n = Math.floor(n/26); }
+    return s;
+  }
+
+  function xmlEsc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Build sheet XMLs FIRST — this populates the strings/strIdx tables via strId()
+  var sheetXmls = sheets.map(function(sh){ return sheetXml(sh.rows); });
+
+  // NOW build shared strings XML (strings[] is fully populated)
+  var ssXml = '<?xml version="1.0" encoding="UTF-8"?>'
+    + '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="'+strings.length+'" uniqueCount="'+strings.length+'">';
+  strings.forEach(function(s) {
+    ssXml += '<si><t xml:space="preserve">'+xmlEsc(s)+'</t></si>';
+  });
+  ssXml += '</sst>';
+
+  // Workbook XML
+  var wbXml = '<?xml version="1.0" encoding="UTF-8"?>'
+    + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+    + 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+    + '<sheets>';
+  sheets.forEach(function(sh, i) {
+    wbXml += '<sheet name="'+xmlEsc(sh.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>';
+  });
+  wbXml += '</sheets></workbook>';
+
+  // Relationships
+  var wbRels = '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">';
+  sheets.forEach(function(sh, i) {
+    wbRels += '<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>';
+  });
+  wbRels += '<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>';
+  wbRels += '</Relationships>';
+
+  var rootRels = '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+    + '</Relationships>';
+
+  // Content types
+  var ct = '<?xml version="1.0" encoding="UTF-8"?>'
+    + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    + '<Default Extension="xml" ContentType="application/xml"/>'
+    + '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+    + '<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>';
+  sheets.forEach(function(sh, i) {
+    ct += '<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+  });
+  ct += '</Types>';
+
+  // Styles (minimal)
+  var styles = '<?xml version="1.0" encoding="UTF-8"?>'
+    + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    + '<fonts><font><sz val="11"/><name val="Calibri"/></font></fonts>'
+    + '<fills><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'
+    + '<borders><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+    + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+    + '<cellXfs><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>'
+    + '</styleSheet>';
+
+  // Build the ZIP
+  var files = [];
+  function addFile(name, content) {
+    files.push({name: name, data: toUint8(content)});
+  }
+  addFile('[Content_Types].xml', ct);
+  addFile('_rels/.rels', rootRels);
+  addFile('xl/workbook.xml', wbXml);
+  addFile('xl/_rels/workbook.xml.rels', wbRels);
+  addFile('xl/sharedStrings.xml', ssXml);
+  addFile('xl/styles.xml', styles);
+  sheetXmls.forEach(function(xml, i) {
+    addFile('xl/worksheets/sheet'+(i+1)+'.xml', xml);
+  });
+
+  var zip = buildZip(files);
+  var blob = new Blob([zip], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function toUint8(str) {
+  var arr = new Uint8Array(str.length);
+  for (var i = 0; i < str.length; i++) arr[i] = str.charCodeAt(i) & 0xff;
+  return arr;
+}
+
+function buildZip(files) {
+  // Minimal ZIP (store method, no compression)
+  var localHeaders = [];
+  var centralDir   = [];
+  var offset = 0;
+
+  function crc32(data) {
+    var table = crc32.t || (function(){
+      var t = new Uint32Array(256);
+      for (var i=0;i<256;i++){var c=i;for(var j=0;j<8;j++)c=c&1?(0xEDB88320^(c>>>1)):(c>>>1);t[i]=c;}
+      return (crc32.t = t);
+    })();
+    var crc = 0xFFFFFFFF;
+    for (var i = 0; i < data.length; i++) crc = table[(crc^data[i])&0xff] ^ (crc>>>8);
+    return (crc^0xFFFFFFFF) >>> 0;
+  }
+
+  function u16(n){ return [n&0xff,(n>>8)&0xff]; }
+  function u32(n){ return [n&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff]; }
+  function concat() {
+    var total = 0;
+    for (var i=0;i<arguments.length;i++) total += arguments[i].length;
+    var out = new Uint8Array(total), pos = 0;
+    for (var i=0;i<arguments.length;i++){
+      out.set(arguments[i] instanceof Array ? new Uint8Array(arguments[i]) : arguments[i], pos);
+      pos += arguments[i].length;
+    }
+    return out;
+  }
+
+  files.forEach(function(f) {
+    var nameBytes = toUint8(f.name);
+    var crc = crc32(f.data);
+    var size = f.data.length;
+    var local = concat(
+      [0x50,0x4B,0x03,0x04], // local file header sig
+      u16(20),               // version needed
+      u16(0),                // flags
+      u16(0),                // compression (store)
+      u16(0), u16(0),        // mod time/date
+      u32(crc),
+      u32(size),             // compressed size
+      u32(size),             // uncompressed size
+      u16(nameBytes.length),
+      u16(0),                // extra field length
+      nameBytes,
+      f.data
+    );
+    var central = concat(
+      [0x50,0x4B,0x01,0x02], // central dir sig
+      u16(20),               // version made by
+      u16(20),               // version needed
+      u16(0),                // flags
+      u16(0),                // compression
+      u16(0), u16(0),        // mod time/date
+      u32(crc),
+      u32(size),
+      u32(size),
+      u16(nameBytes.length),
+      u16(0),                // extra
+      u16(0),                // comment
+      u16(0),                // disk start
+      u16(0),                // internal attr
+      u32(0),                // external attr
+      u32(offset),           // local header offset
+      nameBytes
+    );
+    localHeaders.push(local);
+    centralDir.push(central);
+    offset += local.length;
+  });
+
+  var cdSize = centralDir.reduce(function(a,c){return a+c.length;},0);
+  var eocd = concat(
+    [0x50,0x4B,0x05,0x06], // end of central dir
+    u16(0), u16(0),        // disk / start disk
+    u16(files.length),
+    u16(files.length),
+    u32(cdSize),
+    u32(offset),
+    u16(0)                 // comment length
+  );
+
+  var parts = localHeaders.concat(centralDir).concat([eocd]);
+  return concat.apply(null, parts);
+}
+</script>
+</body>
+</html>
